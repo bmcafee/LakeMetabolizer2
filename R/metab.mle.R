@@ -167,7 +167,7 @@ metab.mle <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type="OE", .
 # ============================================
 mleLoopOE <- function(alpha, doobs, c1, c2, beta, irr, wtr, kz, dosat){
 	nobs <- length(doobs)
-	a.loop <- .C("mleLoopCoe", alpha=as.double(alpha), as.double(doobs), as.double(c1), as.double(c2), as.double(beta), as.double(irr), as.double(wtr), as.double(kz), as.double(dosat), as.integer(nobs), PACKAGE="LakeMetabolizer")
+	a.loop <- .C("mleLoopCoe", alpha=as.double(alpha), as.double(doobs), as.double(c1), as.double(c2), as.double(beta), as.double(irr), as.double(wtr), as.double(kz), as.double(dosat), as.integer(nobs), PACKAGE="LakeMetabolizer2")
 	return(a.loop[["alpha"]])
 }
 
@@ -176,7 +176,7 @@ mleLoopOE <- function(alpha, doobs, c1, c2, beta, irr, wtr, kz, dosat){
 # ============================================
 mleLoopPE <- function(alpha, doobs, c1, c2, beta, irr, wtr, kz, dosat){
 	nobs <- length(doobs)
-	a.loop <- .C("mleLoopCpe", alpha=as.double(alpha), as.double(doobs), as.double(c1), as.double(c2), as.double(beta), as.double(irr), as.double(wtr), as.double(kz), as.double(dosat), as.integer(nobs), PACKAGE="LakeMetabolizer")
+	a.loop <- .C("mleLoopCpe", alpha=as.double(alpha), as.double(doobs), as.double(c1), as.double(c2), as.double(beta), as.double(irr), as.double(wtr), as.double(kz), as.double(dosat), as.integer(nobs), PACKAGE="LakeMetabolizer2")
 	return(a.loop[["alpha"]])
 }
 
