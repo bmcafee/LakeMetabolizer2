@@ -8,6 +8,7 @@
 \alias{k.crusius}
 \alias{k.vachon}
 \alias{k.heiskanen}
+\alias{k.klaus}
 \title{Returns a timeseries of gas exchange velocity}
 \usage{
 k.cole(ts.data)
@@ -23,6 +24,8 @@ k.macIntyre(ts.data, wnd.z, Kd, atm.press,params=c(1.2,0.4872,1.4784))
 k.vachon(ts.data, lake.area, params=c(2.51,1.48,0.39))
 
 k.heiskanen(ts.data, wnd.z, Kd, atm.press)
+
+k.klaus(ts.data, wnd.z, lake.area, sin, sdi = NULL, method = c("linear", "exp", "power"))
 }
 \arguments{
 \item{ts.data}{vector of datetime in POSIXct format}
@@ -37,7 +40,11 @@ k.heiskanen(ts.data, wnd.z, Kd, atm.press)
 
 \item{lake.area}{Lake area, m^2}
 
-\item{method}{Only for \link{k.crusius}. String of valid method . Either "linear", "bilinear", or "power"}
+\item{method}{Only for \link{k.crusius} and \link{k.klaus}. String of valid method . For k.crusius either "linear", "bilinear", or "power". For k.klaus either "linear", "exp", or "power"}
+
+\item{sdi}{Numeric value of shoreline development index. Only for \link{k.klaus}'s "exp" method.}
+
+\item{sin}{Numeric value >0 and ≤1 of the scale of spatial integration. Only for \link{k.klaus}.}
 
 \item{params}{Only for \link{k.vachon.base} and \link{k.macIntyre}. See details.}
 }
@@ -75,6 +82,7 @@ wnd.z      = 10   #because we converted to u10
 atm.press  = 1018
 lat       = tb.data$metadata$latitude
 lake.area = tb.data$metadata$lakearea
+sin        = 1/lake.area
 
 #for k.read and k.macIntyre, we need LW_net.
 #Calculate from the observations we have available.
@@ -89,6 +97,8 @@ k600_soloviev = k.read.soloviev(ts.data, wnd.z=wnd.z, Kd=kd,
 atm.press=atm.press, lat=lat, lake.area=lake.area)
 
 k600_macIntyre = k.macIntyre(ts.data, wnd.z=wnd.z, Kd=kd, atm.press=atm.press)
+
+k600_klaus = k.klaus(ts.data, wnd.z=wnd.z, lake.area=lake.area, sin=sin)
 
 }
 \references{
@@ -118,6 +128,9 @@ transfer coefficients in a boreal lake}. Tellus B 66, no.22827 (2014)
 Alexander Soloviev, Mark Donelan, Hans Graber, Brian Haus, Peter Schlussel.
 \emph{An approach to estimation of near-surface turbulence and CO2 transfer
 velocity from remote sensing data}. Journal of Marine Systems 66, (2007): 182-194.
+
+Marcus Klaus and Dominic Vachon. \emph{Challenges of Predicting Gas Transfer Velocity from Wind Measurements over Global Lakes}. 
+Aquatic Sciences 82 (3): 53. (2020).
 }
 \seealso{
 \link{k.cole}
@@ -125,9 +138,10 @@ velocity from remote sensing data}. Journal of Marine Systems 66, (2007): 182-19
 \link{k.macIntyre}
 \link{k.vachon}
 \link{k.heiskanen}
+\link{k.klaus}
 }
 \author{
-Hilary Dugan, Jake Zwart, Luke Winslow, R. Iestyn. Woolway, Jordan S. Read
+Hilary Dugan, Jake Zwart, Luke Winslow, R. Iestyn. Woolway, Jordan S. Read, Bennett McAfee
 }
 \keyword{math}
 \keyword{methods}
