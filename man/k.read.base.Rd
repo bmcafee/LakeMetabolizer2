@@ -61,7 +61,7 @@ k.klaus.base(wnd, wnd.z, lake.area, sin, sdi = NULL, method = c("linear", "exp",
 
 \item{sdi}{Numeric value of shoreline development index. Only for \link{k.klaus.base}'s "exp" method.}
 
-\item{sin}{Numeric value >0 and ≤1 of the scale of spatial integration. Only for \link{k.klaus.base}.}
+\item{sin}{Numeric value >0 and <1 of the scale of spatial integration. Only for \link{k.klaus.base}.}
 
 \item{params}{Optional parameter input, only for \link{k.vachon.base} and \link{k.macIntyre.base}. See details.}
 }

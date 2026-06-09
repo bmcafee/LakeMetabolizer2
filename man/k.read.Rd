@@ -44,7 +44,7 @@ k.klaus(ts.data, wnd.z, lake.area, sin, sdi = NULL, method = c("linear", "exp", 
 
 \item{sdi}{Numeric value of shoreline development index. Only for \link{k.klaus}'s "exp" method.}
 
-\item{sin}{Numeric value >0 and ≤1 of the scale of spatial integration. Only for \link{k.klaus}.}
+\item{sin}{Numeric value >0 and <1 of the scale of spatial integration. Only for \link{k.klaus}.}
 
 \item{params}{Only for \link{k.vachon.base} and \link{k.macIntyre}. See details.}
 }

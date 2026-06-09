@@ -59,4 +59,4 @@ k.klaus.base <- function(wnd, wnd.z, lake.area, sin, sdi = NULL, method = c("lin
 # -- References
 # Klaus, Marcus, and Dominic Vachon. 2020. 
 # Challenges of Predicting Gas Transfer Velocity from Wind Measurements over Global Lakes. 
-# Aquatic Sciences 82 (3): 53. https://doi.org/10.1007/s00027-020-00729-9.
+# Aquatic Sciences 82 (3): 53. https://doi.org/10.1007/s00027-020-00729-9
