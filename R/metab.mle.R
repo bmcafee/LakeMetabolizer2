@@ -130,7 +130,7 @@ metab.mle <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type="OE", .
 
 	Q0 <- ((diff(range(do.obs,na.rm=TRUE)) - mean(do.obs,na.rm=TRUE))^2 / length(do.obs))
 
-	guesses <- c(1E-4, 1E-4, log(Q0))
+	guesses <- c(log(1E-4), log(1E-4), log(Q0))
 
 	#We have a different number of fitted parameters depending on error type of the model
 	if(error.type=='OE'){
@@ -139,7 +139,7 @@ metab.mle <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type="OE", .
 		fit <- optim(guesses, fn=mleNllOE, do.obs=do.obs, do.sat=do.sat, k.gas=(k.gas/freq), z.mix=z.mix, irr=irr, wtr=wtr)
 
 		pars0 <- fit$par
-		pars <- c("gppCoeff"=pars0[1], "rCoeff"=pars0[2], "Q"=exp(pars0[3]), "nll"=fit$value, "doInit"=pars0[4])
+		pars <- c("gppCoeff"=exp(pars0[1]), "rCoeff"=-exp(pars0[2]), "Q"=exp(pars0[3]), "nll"=fit$value, "doInit"=pars0[4])
 
 	}else if(error.type=='PE'){
 		guesses <- c(guesses)
@@ -147,7 +147,7 @@ metab.mle <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type="OE", .
 		fit <- optim(guesses, fn=mleNllPE, do.obs=do.obs, do.sat=do.sat, k.gas=(k.gas/freq), z.mix=z.mix, irr=irr, wtr=wtr)
 
 		pars0 <- fit$par
-		pars <- c("gppCoeff"=pars0[1], "rCoeff"=pars0[2], "Q"=exp(pars0[3]), "nll"=fit$value)
+		pars <- c("gppCoeff"=exp(pars0[1]), "rCoeff"=-exp(pars0[2]), "Q"=exp(pars0[3]), "nll"=fit$value)
 
 	}else{
 		stop("error.type must be either 'OE' or 'PE', Observation Error or Process Error respectively.")
@@ -184,45 +184,45 @@ mleLoopPE <- function(alpha, doobs, c1, c2, beta, irr, wtr, kz, dosat){
 # = mle NLL function =
 # ====================
 mleNllPE <- function(Params, do.obs, do.sat, k.gas, z.mix, irr, wtr){
-	c1 <- Params[1] #PAR coeff
-	c2 <- Params[2] #log(Temp) coeff
-	Q <- exp(Params[3]) # Variance of the process error
-
-	# See KalmanDO_smooth.R comments for explanation of beta
-	kz <- k.gas/z.mix # K and Zmix are both vector of length nobs
-	beta <- exp(-kz) # This beta is for using the differential equation form
-
-	# Set first true value equal to first observation
-	alpha <- rep(0, length(do.obs))
-	alpha[1] <- do.obs[1]#Let's give this model some starting values
-
-	#R version of C loop
-	#for(i in 2:length(do.obs)){
-	#	a1 <- c1*irr[i-1] + c2*log(wtr[i-1]) + kz[i-1]*do.sat[i-1]
-	#	alpha[i] <- a1/kz[i-1] + -exp(-kz[i-1])*a1/kz[i-1] + beta[i-1]*alpha[i-1] # NOTE: beta==exp(-kz); kz=K/Zmix
-	#}
-	alpha <- mleLoopPE(alpha=alpha, doobs=do.obs, c1=c1, c2=c2, beta=beta, irr=irr, wtr=wtr, kz=kz, dosat=do.sat)
-
-	return(-sum(dnorm(do.obs, alpha, sd=sqrt(Q), log=TRUE), na.rm=TRUE))
+  c1 <- exp(Params[1]) #PAR coeff
+  c2 <- -exp(Params[2]) #log(Temp) coeff
+  Q <- exp(Params[3]) # Variance of the process error
+  
+  # See KalmanDO_smooth.R comments for explanation of beta
+  kz <- k.gas/z.mix # K and Zmix are both vector of length nobs
+  beta <- exp(-kz) # This beta is for using the differential equation form
+  
+  # Set first true value equal to first observation
+  alpha <- rep(0, length(do.obs))
+  alpha[1] <- do.obs[1]#Let's give this model some starting values
+  
+  #R version of C loop
+  #for(i in 2:length(do.obs)){
+  #	a1 <- c1*irr[i-1] + c2*log(wtr[i-1]) + kz[i-1]*do.sat[i-1]
+  #	alpha[i] <- a1/kz[i-1] + -exp(-kz[i-1])*a1/kz[i-1] + beta[i-1]*alpha[i-1] # NOTE: beta==exp(-kz); kz=K/Zmix
+  #}
+  alpha <- mleLoopPE(alpha=alpha, doobs=do.obs, c1=c1, c2=c2, beta=beta, irr=irr, wtr=wtr, kz=kz, dosat=do.sat)
+  
+  return(-sum(dnorm(do.obs, alpha, sd=sqrt(Q), log=TRUE), na.rm=TRUE))
 }#End function
 
 # ====================
 # = mle NLL function =
 # ====================
 mleNllOE <- function(Params, do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type){
-	c1 <- Params[1] #PAR coeff
-	c2 <- Params[2] #log(Temp) coeff
-	Q <- exp(Params[3]) # Variance of the process error
-
-	# See KalmanDO_smooth.R comments for explanation of beta
-	kz <- k.gas/z.mix # K and Zmix are both vector of length nobs
-	beta <- exp(-kz) # This beta is for using the differential equation form
-
-	# Set first true value equal to first observation
-	alpha <- rep(0, length(do.obs))
-	alpha[1] <- Params[4] #Free varying initial DO value
-
-	alpha <- mleLoopOE(alpha=alpha, doobs=do.obs, c1=c1, c2=c2, beta=beta, irr=irr, wtr=wtr, kz=kz, dosat=do.sat)
-
-	return(-sum(dnorm(do.obs, alpha, sd=sqrt(Q), log=TRUE), na.rm=TRUE))
+  c1 <- exp(Params[1]) #PAR coeff
+  c2 <- -exp(Params[2]) #log(Temp) coeff
+  Q <- exp(Params[3]) # Variance of the process error
+  
+  # See KalmanDO_smooth.R comments for explanation of beta
+  kz <- k.gas/z.mix # K and Zmix are both vector of length nobs
+  beta <- exp(-kz) # This beta is for using the differential equation form
+  
+  # Set first true value equal to first observation
+  alpha <- rep(0, length(do.obs))
+  alpha[1] <- Params[4] #Free varying initial DO value
+  
+  alpha <- mleLoopOE(alpha=alpha, doobs=do.obs, c1=c1, c2=c2, beta=beta, irr=irr, wtr=wtr, kz=kz, dosat=do.sat)
+  
+  return(-sum(dnorm(do.obs, alpha, sd=sqrt(Q), log=TRUE), na.rm=TRUE))
 }#End function
