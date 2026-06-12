@@ -1,6 +1,6 @@
 #'@title Metabolism calculated from the maximum likelihood estimates of the parameters in a standard linear regression model
 #'@description Process-error-only model with parameters fitted via maximum likelihood estimation (MLE). This function runs the maximum likelihood metabolism model on the supplied gas concentration and other supporting data.
-#'@param do.obs Vector of dissolved oxygen concentration observations, \eqn{mg O[2] L^{-1}}{mg O2 / L}
+#'@param do.obs Vector of dissolved oxygen concentration observations, \eqn{mg O_2 L^{-1}}{mg O2 / L}
 #'@param do.sat Vector of dissolved oxygen saturation values based on water temperature. Calculate using \link{o2.at.sat}
 #'@param k.gas Vector of kGAS values calculated from any of the gas flux models
 #'(e.g., \link{k.cole}) and converted to kGAS using \link{k600.2.kGAS}
@@ -8,6 +8,8 @@
 #'@param irr Vector of photosynthetically active radiation in \eqn{\mu mol\ m^{-2} s^{-1}}{micro mols / m^2 / s}
 #'@param wtr Vector of water temperatures in \eqn{^{\circ}C}{degrees C}. Used in scaling respiration with temperature
 #'@param error.type Option specifying if model should assume pure Process Error 'PE' or Observation Error 'OE'. Defaults to observation error 'OE'.
+#'@param n.boot Numeric of the number of bootstrap iterations. Set to 0 to bypass uncertainty quantification (default). Set to 2 or greater to quantify uncertainty via bootstrapping.
+#'@param ar1.resids Logical. If TRUE, the AR(1) structure of the residuals will be retained during randomization when bootstrapping.
 #'@param ... additional arguments; currently "datetime" is the only recognized argument passed through \code{...}
 #'@return
 #'A data.frame with columns corresponding to components of metabolism
@@ -15,6 +17,18 @@
 #'\item{GPP}{numeric estimate of Gross Primary Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
 #'\item{R}{numeric estimate of Respiration, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
 #'\item{NEP}{numeric estimate of Net Ecosystem production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
+#'}
+#'If n.boot is 2 or greater, the data frame will also contain the following columns:
+#'\describe{
+#'\item{GPP.lci}{lower 95\% confidence interval of the estimate of Gross Primary Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
+#'\item{GPP.uci}{upper 95\% confidence interval of the estimate of Gross Primary Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
+#'\item{GPP.cv}{coefficient of variation of the bootstrapped estimates of Gross Primary Production}
+#'\item{R.lci}{lower 95\% confidence interval of the estimate of Respiration, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
+#'\item{R.uci}{upper 95\% confidence interval of the estimate of Respiration, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
+#'\item{R.cv}{coefficient of variation of the bootstrapped estimates of Respiration}
+#'\item{NEP.lci}{lower 95\% confidence interval of the estimate of Net Ecosystem Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
+#'\item{NEP.uci}{upper 95\% confidence interval of the estimate of Net Ecosystem Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
+#'\item{NEP.cv}{coefficient of variation of the bootstrapped estimates of Net Ecosystem Production}
 #'}
 #' The maximum likelihood estimates of model parameters can be accessed via \code{attributes(metab.mle(...))[["params"]]}
 #'
@@ -46,19 +60,27 @@
 #'NEP is the sum of GPP and R.
 #'
 #'@note Currently, missing values in any arguments will result in an error, so freq must always equal nobs.
-#'@author Luke A Winslow, Ryan Batt, GLEON Fellows
+#'@author Luke A Winslow, Ryan Batt, Bennett McAfee, GLEON Fellows
 #'@references
-#'Hanson, PC, SR Carpenter, N Kimura, C Wu, SP Cornelius, TK Kratz. 2008
-#'\emph{Evaluation of metabolism models for free-water dissolved oxygen in lakes}.
-#'Limnology and Oceanography: Methods 6: 454:465.
+#'Hanson, Paul C., Stephen R. Carpenter, Nobuaki Kimura, Chin Wu, Sean P. Cornelius, 
+#'and Timothy K. Kratz. 2008. \emph{Evaluation of Metabolism Models for Free-Water Dissolved 
+#'Oxygen Methods in Lakes}. Limnology and Oceanography: Methods 6 (9): 454–65. 
+#'\url{https://doi.org/10.4319/lom.2008.6.454}.
 #'
-#'Solomon CT, DA Bruesewitz, DC Richardson, KC Rose, MC Van de Bogert, PC Hanson, TK Kratz, B Larget,
-#'R Adrian, B Leroux Babin, CY Chiu, DP Hamilton, EE Gaiser, S Hendricks, V Istvanovics, A Laas, DM O'Donnell,
-#'ML Pace, E Ryder, PA Staehr, T Torgersen, MJ Vanni, KC Weathers, G Zhuw. 2013.
-#'\emph{Ecosystem Respiration: Drivers of Daily Variability and Background Respiration in Lakes around the Globe}.
-#'Limnology and Oceanography 58 (3): 849:866. doi:10.4319/lo.2013.58.3.0849.
+#'Solomon, Christopher T., Denise A. Bruesewitz, David C. Richardson, et al. 2013. 
+#'\emph{Ecosystem Respiration: Drivers of Daily Variability and Background Respiration in Lakes around the Globe}. 
+#'Limnology and Oceanography 58 (3): 849–66. \url{https://doi.org/10.4319/lo.2013.58.3.0849}.
 #'
-#'@importFrom stats dnorm optim
+#'Dugan, Hilary A., R. Iestyn Woolway, Arianto B. Santoso, et al. 2016. 
+#'\emph{Consequences of Gas Flux Model Choice on the Interpretation of Metabolic 
+#'Balance across 15 Lakes}. Inland Waters 6 (4): 581–92. \url{https://doi.org/10.1080/IW-6.4.836}.
+#'
+#'Corman, Jessica R., Jacob A. Zwart, Jennifer Klug, et al. 2023. \emph{Response of 
+#'Lake Metabolism to Catchment Inputs Inferred Using High-Frequency Lake and 
+#'Stream Data from across the Northern Hemisphere}. Limnology and Oceanography 
+#'68 (12): 2617–31. \url{https://doi.org/10.1002/lno.12449}.
+#'
+#'@importFrom stats dnorm optim rnorm quantile
 #'
 #'@seealso
 #'\link{metab}, \link{metab.bookkeep}, \link{metab.ols}, \link{metab.kalman}, \link{metab.bayesian}
@@ -87,7 +109,7 @@
 #'
 #'metab.mle(doobs[,2], do.sat, k.gas, z.mix[,2], irr[,2], wtr[,3])
 #'@export
-metab.mle <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type="OE", ...){
+metab.mle <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type="OE", n.boot = 0, ar1.resids = TRUE, ...){
   
   complete.inputs(do.obs=do.obs, do.sat=do.sat, k.gas=k.gas,
                   z.mix=z.mix, irr=irr, wtr=wtr, error=TRUE)
@@ -159,7 +181,29 @@ metab.mle <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type="OE", .
   GPP <- mean(pars[1]*irr, na.rm=TRUE) * freq
   R <- mean(pars[2]*log(wtr), na.rm=TRUE) * freq
   
-  return(list("params"=pars, "metab"=c("GPP"=GPP,"R"=R,"NEP"=GPP+R)))
+  # =================================
+  # = Bootstrapping for uncertainty =
+  # =================================
+  if (n.boot == 0){
+    results <- list("params"=pars, "metab"=c("GPP"=GPP,"R"=R,"NEP"=GPP+R))
+  } else if (n.boot >= 2){
+    boot.results <- bootstrap.mle(n.boot, do.obs, pars, guesses, do.sat, k.gas, freq, z.mix, irr, wtr, error.type, ar1.resids)
+    ci.GPP <- stats::quantile(boot.results$GPP, c(0.025, 0.975), na.rm=TRUE) # 95% confidence interval
+    ci.R   <- stats::quantile(boot.results$R,   c(0.025, 0.975), na.rm=TRUE) # 95% confidence interval
+    ci.NEP <- stats::quantile(boot.results$NEP, c(0.025, 0.975), na.rm=TRUE) # 95% confidence interval
+    cv.GPP <- stats::sd(boot.results$GPP, na.rm=TRUE)/mean(boot.results$GPP, na.rm=TRUE) # coefficient of variation
+    cv.R   <- stats::sd(boot.results$R, na.rm=TRUE)/mean(boot.results$R, na.rm=TRUE) # coefficient of variation
+    cv.NEP <- stats::sd(boot.results$NEP, na.rm=TRUE)/mean(boot.results$NEP, na.rm=TRUE) # coefficient of variation
+    results <- list("params"=pars, 
+                "metab"=c("GPP"=GPP,"R"=R,"NEP"=GPP+R,
+                          "GPP.lci" = unname(ci.GPP[1]), "GPP.uci" = unname(ci.GPP[2]), "GPP.cv" = cv.GPP,
+                          "R.lci" = unname(ci.R[1]), "R.uci" = unname(ci.R[2]), "R.cv" = cv.R,
+                          "NEP.lci" = unname(ci.NEP[1]), "NEP.uci" = unname(ci.NEP[2]), "NEP.cv" = cv.NEP))
+  } else {
+    stop("n.boot must be 0 (no uncertainty quantification) or greater than 2 (uncertainty quantification via bootstrapping).")
+  }
+  
+  return(results)
 }
 
 # ============================================
@@ -226,3 +270,93 @@ mleNllOE <- function(Params, do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type)
   
   return(-sum(dnorm(do.obs, alpha, sd=sqrt(Q), log=TRUE), na.rm=TRUE))
 }#End function
+
+# =========================================
+# = Function to bootstrap for uncertainty =
+# =========================================
+bootstrap.mle <- function(n.boot, do.obs, pars, guesses, do.sat, k.gas, freq, z.mix, irr, wtr, error.type = "OE", ar1.resids = FALSE){
+  
+  ## Calculate fitted values and residuals
+  if (error.type == "OE"){
+    alpha <- mleLoopOE(alpha = c(do.obs[1], rep(0, length(do.obs) - 1)),
+                       doobs = do.obs,
+                       c1 = pars[1],
+                       c2 = pars[2],
+                       beta = exp(-(k.gas / freq / z.mix)),
+                       irr = irr,
+                       wtr = wtr,
+                       kz = k.gas / freq / z.mix,
+                       dosat = do.sat)
+  } else if (error.type == "PE"){
+    alpha <- mleLoopPE(alpha = c(do.obs[1], rep(0, length(do.obs) - 1)),
+                       doobs = do.obs,
+                       c1 = pars[1],
+                       c2 = pars[2],
+                       beta = exp(-(k.gas / freq / z.mix)),
+                       irr = irr,
+                       wtr = wtr,
+                       kz = k.gas / freq / z.mix,
+                       dosat = do.sat)
+  } else {
+    stop("error.type must be either 'OE' or 'PE', Observation Error or Process Error respectively.")
+  }
+  
+  
+  resids <- do.obs - alpha
+  n.obs <- length(do.obs)
+  
+  if (ar1.resids){
+    ar1.lm <- lm(resids[1:(n.obs - 1)] ~ resids[2:n.obs] - 1)
+    ar1.coeff <- as.numeric(ar1.lm$coefficients)
+    ar1.sd <- sd(ar1.lm$residuals)
+  }
+  
+  ## Initialize results object
+  boot.results <- data.frame(boot.iter = seq_len(n.boot),
+                             gppCoeff = rep(NA, n.boot),
+                             rCoeff = rep(NA, n.boot),
+                             Q = rep(NA, n.boot),
+                             doInit = rep(NA, n.boot),
+                             convergence = rep(NA, n.boot),
+                             nll = rep(NA, n.boot),
+                             GPP = rep(NA, n.boot),
+                             R = rep(NA, n.boot),
+                             NEP = rep(NA, n.boot))
+  
+  ## Bootstrap loop
+  for (i in boot.results$boot.iter){
+    
+    if (ar1.resids) {
+      # Residual randomization preserving AR(1)
+      simRes <- rep(NA, n.obs)
+      simRes[1] <- sample(resids[!is.na(resids)], 1)
+      for (j in 2:n.obs){simRes[j] <- ar1.coeff * simRes[j - 1] + stats::rnorm(1, sd = ar1.sd)}
+    } else {
+      # Residual randomization without replacement
+      simRes <- sample(resids[!is.na(resids)], length(resids), replace = FALSE)
+    }
+    
+    doSim <- alpha + simRes
+    
+    if (error.type == "OE"){
+      simFit <- optim(guesses, fn = mleNllOE, do.obs = doSim, do.sat = do.sat, k.gas = k.gas / freq, z.mix = z.mix, irr = irr, wtr = wtr)
+    } else if (error.type == "PE"){
+      simFit <- optim(guesses, fn = mleNllPE, do.obs = doSim, do.sat = do.sat, k.gas = k.gas / freq, z.mix = z.mix, irr = irr, wtr = wtr)
+    }
+    simFitPar <- simFit$par
+    simFitGPP <- mean(exp(simFitPar[1]) * irr, na.rm = TRUE) * freq
+    simFitR <- mean(-exp(simFitPar[2]) * log(wtr), na.rm = TRUE) * freq
+    
+    boot.results[i, "gppCoeff"] <- exp(simFitPar[1])
+    boot.results[i, "rCoeff"] <- -exp(simFitPar[2])
+    boot.results[i, "Q"] <- exp(simFitPar[3])
+    boot.results[i, "doInit"] <- simFitPar[4]
+    boot.results[i, "convergence"] <- simFit$convergence
+    boot.results[i, "nll"] <- simFit$value
+    boot.results[i, "GPP"] <- simFitGPP
+    boot.results[i, "R"] <- simFitR
+    boot.results[i, "NEP"] <- simFitGPP + simFitR
+  }
+  
+  return(boot.results)
+}
