@@ -4,7 +4,7 @@
 \alias{metab.kalman}
 \title{Metabolism calculated from parameters estimated using a Kalman filter}
 \usage{
-metab.kalman(do.obs, do.sat, k.gas, z.mix, irr, wtr, ...)
+metab.kalman(do.obs, do.sat, k.gas, z.mix, irr, wtr, n.boot = 0, ...)
 }
 \arguments{
 \item{do.obs}{Vector of dissovled oxygen concentration observations, \eqn{mg O[2] L^{-1}}{mg O2 / L}}
@@ -20,6 +20,8 @@ metab.kalman(do.obs, do.sat, k.gas, z.mix, irr, wtr, ...)
 
 \item{wtr}{Vector of water temperatures in \eqn{^{\circ}C}{degrees C}. Used in scaling respiration with temperature}
 
+\item{n.boot}{Numeric of the number of bootstrap iterations. Set to 0 to bypass uncertainty quantification (default). Set to 2 or greater to quantify uncertainty via bootstrapping.}
+
 \item{...}{additional arguments; currently "datetime" is the only recognized argument passed through \code{...}}
 }
 \value{
@@ -28,6 +30,18 @@ A data.frame with columns corresponding to components of metabolism
 \item{GPP}{numeric estimate of Gross Primary Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
 \item{R}{numeric estimate of Respiration, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
 \item{NEP}{numeric estimate of Net Ecosystem production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
+}
+If n.boot is 2 or greater, the data frame will also contain the following columns:
+\describe{
+\item{GPP.lci}{lower 95\% confidence interval of the estimate of Gross Primary Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
+\item{GPP.uci}{upper 95\% confidence interval of the estimate of Gross Primary Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
+\item{GPP.cv}{coefficient of variation of the bootstrapped estimates of Gross Primary Production}
+\item{R.lci}{lower 95\% confidence interval of the estimate of Respiration, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
+\item{R.uci}{upper 95\% confidence interval of the estimate of Respiration, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
+\item{R.cv}{coefficient of variation of the bootstrapped estimates of Respiration}
+\item{NEP.lci}{lower 95\% confidence interval of the estimate of Net Ecosystem Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
+\item{NEP.uci}{upper 95\% confidence interval of the estimate of Net Ecosystem Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
+\item{NEP.cv}{coefficient of variation of the bootstrapped estimates of Net Ecosystem Production}
 }
 
 
@@ -99,7 +113,10 @@ metab.kalman(irr=irr[,2], z.mix=rep(1, length(k.gas)),
 }
 \references{
 Batt, Ryan D. and Stephen R. Carpenter. 2012. \emph{Free-water lake metabolism:
-addressing noisy time series with a Kalman filter}. Limnology and Oceanography: Methods 10: 20-30. doi: 10.4319/lom.2012.10.20
+addressing noisy time series with a Kalman filter}. Limnology and Oceanography: Methods 10: 20-30. \url{https://doi.org/10.4319/lom.2012.10.20}
+
+Stoffer, David S., and Kent D. Wall. 1991. \emph{Bootstrapping State-Space Models: Gaussian Maximum Likelihood Estimation and the Kalman Filter}. 
+Journal of the American Statistical Association 86 (416): 1024–33. \url{https://doi.org/10.2307/2290521}.
 }
 \seealso{
 \link{temp.kalman}, \link{watts.in}, \link{metab}, \link{metab.bookkeep}, \link{metab.ols}, \link{metab.mle}, \link{metab.bayesian}
