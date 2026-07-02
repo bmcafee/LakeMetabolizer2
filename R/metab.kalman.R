@@ -131,10 +131,10 @@ metab.kalman <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, n.boot = 0, ...
   }
   
   # Filter and fit
-  guesses <- c(1E-4,1E-4,log(5),log(5))
+  guesses <- c(log(1E-4),log(1E-4),log(5),log(5))
   fit <- optim(guesses, fn=KFnllDO, do.obs=do.obs, do.sat=do.sat, k.gas=(k.gas/freq), z.mix=z.mix, irr=irr, wtr=wtr)
   pars0 <- fit$par
-  pars <- c("gppCoeff"=pars0[1], "rCoeff"=pars0[2], "Q"=exp(pars0[3]), "H"=exp(pars0[4]))
+  pars <- c("gppCoeff"=exp(pars0[1]), "rCoeff"=-exp(pars0[2]), "Q"=exp(pars0[3]), "H"=exp(pars0[4]))
   
   # Smooth
   KFresults <- KFsmoothDO(pars, do.obs=do.obs, do.sat=do.sat, k.gas=(k.gas/freq), z.mix=z.mix, irr=irr, wtr=wtr)
@@ -184,8 +184,8 @@ KFnllDO <- function(Params, do.obs, do.sat, k.gas, z.mix, irr, wtr){
   # = Unpack and set initials =
   # ===========================
   #!Pseudocode #1: Initial guesses for B, C, and Q t
-  c1 <- Params[1] #PAR coeff
-  c2 <- Params[2] #log(Temp) coeff
+  c1 <- exp(Params[1]) #PAR coeff
+  c2 <- -exp(Params[2]) #log(Temp) coeff
   Q <- exp(Params[3]) # Variance of the process error
   H <- exp(Params[4]) # Variance of observation error
   
@@ -467,12 +467,12 @@ bootstrap.kalman <- function(n.boot, Params, KFresults, guesses, do.obs, do.sat,
     # MLE
     simFit <- optim(guesses, fn=KFnllDO, do.obs=do.sim, do.sat=do.sat, k.gas=k.gas, z.mix=z.mix, irr=irr, wtr=wtr)
     simFitPar <- simFit$par
-    simFitGPP <- mean(simFitPar[1] * irr, na.rm = TRUE) * freq
-    simFitR <- mean(simFitPar[2] * log(wtr), na.rm = TRUE) * freq
+    simFitGPP <- mean(exp(simFitPar[1]) * irr, na.rm = TRUE) * freq
+    simFitR <- mean(-exp(simFitPar[2]) * log(wtr), na.rm = TRUE) * freq
     
     # Writing results to table
-    boot.results[j, "gppCoeff"] <- simFitPar[1]
-    boot.results[j, "rCoeff"] <- simFitPar[2]
+    boot.results[j, "gppCoeff"] <- exp(simFitPar[1])
+    boot.results[j, "rCoeff"] <- -exp(simFitPar[2])
     boot.results[j, "Q"] <- exp(simFitPar[3])
     boot.results[j, "H"] <- exp(simFitPar[4])
     boot.results[j, "convergence"] <- simFit$convergence

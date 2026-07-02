@@ -122,5 +122,5 @@ Journal of the American Statistical Association 86 (416): 1024–33. \url{https:
 \link{temp.kalman}, \link{watts.in}, \link{metab}, \link{metab.bookkeep}, \link{metab.ols}, \link{metab.mle}, \link{metab.bayesian}
 }
 \author{
-Ryan Batt, Luke A. Winslow
+Ryan Batt, Luke A. Winslow, Bennett McAfee
 }
