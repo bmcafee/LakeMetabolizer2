@@ -40,14 +40,14 @@ k.klaus.base <- function(wnd, wnd.z, lake.area, sin, sdi = NULL, method = c("lin
   }
   
   if (method == "linear") {
-    k600 <- (0.328 * log10(lake.area) + 1.581) * wnd - 0.066 * logit_custom(sin) + 1.266
+    k600 <- (0.328 * log10(lake.area) + 1.581) * wnd - 0.066 * logit.custom(sin) + 1.266
   } else if (method == "power") {
-    k600 <- (0.281 * log10(lake.area) + 1.361) * (wnd ^ 1.097) - 0.072 * logit_custom(sin) + 1.401
+    k600 <- (0.281 * log10(lake.area) + 1.361) * (wnd ^ 1.097) - 0.072 * logit.custom(sin) + 1.401
   } else if (method == "exp") {
     if (is.null(sdi)) {
       stop("sdi must be provided for exponential model")
     }
-    k600 <- (-0.057 * logit_custom(sin) + 2.366) * exp(wnd * (0.144 * log10(sdi) + 0.156))
+    k600 <- (-0.057 * logit.custom(sin) + 2.366) * exp(wnd * (0.144 * log10(sdi) + 0.156))
   }
   
   k600 <- k600 * (24/100) # convert cm/hr to m/day
