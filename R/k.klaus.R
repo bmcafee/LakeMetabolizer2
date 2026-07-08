@@ -26,7 +26,7 @@ k.klaus.base <- function(wnd, wnd.z, lake.area, sin, sdi = NULL, method = c("lin
   
   # Converting uz to u10
   if (wnd.z != 10){
-    wnd <- LakeMetabolizer::wind.scale.base(wnd = wnd, wnd.z = wnd.z)
+    wnd <- wind.scale.base(wnd = wnd, wnd.z = wnd.z)
   }
   
   # helper logit function
