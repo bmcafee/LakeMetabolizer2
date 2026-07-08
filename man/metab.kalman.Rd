@@ -4,7 +4,17 @@
 \alias{metab.kalman}
 \title{Metabolism calculated from parameters estimated using a Kalman filter}
 \usage{
-metab.kalman(do.obs, do.sat, k.gas, z.mix, irr, wtr, n.boot = 0, ...)
+metab.kalman(
+  do.obs,
+  do.sat,
+  k.gas,
+  z.mix,
+  irr,
+  wtr,
+  n.boot = 0,
+  constrain.sign = TRUE,
+  ...
+)
 }
 \arguments{
 \item{do.obs}{Vector of dissovled oxygen concentration observations, \eqn{mg O[2] L^{-1}}{mg O2 / L}}
@@ -21,6 +31,8 @@ metab.kalman(do.obs, do.sat, k.gas, z.mix, irr, wtr, n.boot = 0, ...)
 \item{wtr}{Vector of water temperatures in \eqn{^{\circ}C}{degrees C}. Used in scaling respiration with temperature}
 
 \item{n.boot}{Numeric of the number of bootstrap iterations. Set to 0 to bypass uncertainty quantification (default). Set to 2 or greater to quantify uncertainty via bootstrapping.}
+
+\item{constrain.sign}{Logical. If TRUE, estimates of GPP and R coefficients with be constrained to positive and negative values, respectively.}
 
 \item{...}{additional arguments; currently "datetime" is the only recognized argument passed through \code{...}}
 }

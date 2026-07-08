@@ -9,6 +9,7 @@
 #'@param irr Vector of photosynthetically active radiation in \eqn{\mu mol\ m^{-2} s^{-1}}{micro mols / m^2 / s}
 #'@param wtr Vector of water temperatures in \eqn{^{\circ}C}{degrees C}. Used in scaling respiration with temperature
 #'@param n.boot Numeric of the number of bootstrap iterations. Set to 0 to bypass uncertainty quantification (default). Set to 2 or greater to quantify uncertainty via bootstrapping.
+#'@param constrain.sign Logical. If TRUE, estimates of GPP and R coefficients with be constrained to positive and negative values, respectively.
 #'@param ... additional arguments; currently "datetime" is the only recognized argument passed through \code{...}
 #'@return
 #'A data.frame with columns corresponding to components of metabolism
@@ -100,7 +101,7 @@
 #'             do.sat=do.sat, wtr=wtr[,2],
 #'             k.gas=k.gas, do.obs=doobs[,2])
 #'@export
-metab.kalman <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, n.boot = 0, ...){
+metab.kalman <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, n.boot = 0, constrain.sign = TRUE, ...){
   
   complete.inputs(do.obs=do.obs, do.sat=do.sat, k.gas=k.gas,
                   z.mix=z.mix, irr=irr, wtr=wtr, error=TRUE)
@@ -131,10 +132,19 @@ metab.kalman <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, n.boot = 0, ...
   }
   
   # Filter and fit
-  guesses <- c(log(1E-4),log(1E-4),log(5),log(5))
-  fit <- optim(guesses, fn=KFnllDO, do.obs=do.obs, do.sat=do.sat, k.gas=(k.gas/freq), z.mix=z.mix, irr=irr, wtr=wtr)
+  if (constrain.sign == TRUE){
+    guesses <- c(log(1E-4),log(1E-4),log(5),log(5))
+  } else {
+    guesses <- c(1E-4,1E-4,log(5),log(5))
+  }
+  fit <- optim(guesses, fn=KFnllDO, do.obs=do.obs, do.sat=do.sat, k.gas=(k.gas/freq), z.mix=z.mix, irr=irr, wtr=wtr, constrain.sign=constrain.sign)
   pars0 <- fit$par
-  pars <- c("gppCoeff"=exp(pars0[1]), "rCoeff"=-exp(pars0[2]), "Q"=exp(pars0[3]), "H"=exp(pars0[4]))
+  if (constrain.sign == TRUE){
+    pars <- c("gppCoeff"=exp(pars0[1]), "rCoeff"=-exp(pars0[2]), "Q"=exp(pars0[3]), "H"=exp(pars0[4]))
+  } else {
+    pars <- c("gppCoeff"=pars0[1], "rCoeff"=pars0[2], "Q"=exp(pars0[3]), "H"=exp(pars0[4]))
+  }
+  
   
   # Smooth
   KFresults <- KFsmoothDO(pars, do.obs=do.obs, do.sat=do.sat, k.gas=(k.gas/freq), z.mix=z.mix, irr=irr, wtr=wtr)
@@ -150,7 +160,7 @@ metab.kalman <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, n.boot = 0, ...
     
   } else if (n.boot >= 2){
     
-    boot.results <- bootstrap.kalman(n.boot, Params = pars, KFresults, guesses, do.obs, do.sat, k.gas =(k.gas/freq), freq, z.mix, irr, wtr)
+    boot.results <- bootstrap.kalman(n.boot, Params = pars, KFresults, guesses, do.obs, do.sat, k.gas =(k.gas/freq), freq, z.mix, irr, wtr, constrain.sign)
     ci.GPP <- stats::quantile(boot.results$GPP, c(0.025, 0.975), na.rm=TRUE) # 95% confidence interval
     ci.R   <- stats::quantile(boot.results$R,   c(0.025, 0.975), na.rm=TRUE) # 95% confidence interval
     ci.NEP <- stats::quantile(boot.results$NEP, c(0.025, 0.975), na.rm=TRUE) # 95% confidence interval
@@ -178,14 +188,19 @@ metab.kalman <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, n.boot = 0, ...
 # = Kalman filter/ nll =
 # ======================
 # Main recursion written in C
-KFnllDO <- function(Params, do.obs, do.sat, k.gas, z.mix, irr, wtr){
+KFnllDO <- function(Params, do.obs, do.sat, k.gas, z.mix, irr, wtr, constrain.sign){
   
   # ===========================
   # = Unpack and set initials =
   # ===========================
   #!Pseudocode #1: Initial guesses for B, C, and Q t
-  c1 <- exp(Params[1]) #PAR coeff
-  c2 <- -exp(Params[2]) #log(Temp) coeff
+  if (constrain.sign == TRUE){
+    c1 <- exp(Params[1]) #PAR coeff
+    c2 <- -exp(Params[2]) #log(Temp) coeff
+  } else {
+    c1 <- Params[1] #PAR coeff
+    c2 <- Params[2] #log(Temp) coeff
+  }
   Q <- exp(Params[3]) # Variance of the process error
   H <- exp(Params[4]) # Variance of observation error
   
@@ -402,7 +417,7 @@ kalmanLoopR <- function(nlls, alpha, doobs, c1, c2, P, Q, H, beta, irr, wtr, kz,
 # =========================================
 # = Function to bootstrap for uncertainty =
 # =========================================
-bootstrap.kalman <- function(n.boot, Params, KFresults, guesses, do.obs, do.sat, k.gas, freq, z.mix, irr, wtr, Hfac = NULL){
+bootstrap.kalman <- function(n.boot, Params, KFresults, guesses, do.obs, do.sat, k.gas, freq, z.mix, irr, wtr, constrain.sign, Hfac = NULL){
   
   nobs <- length(do.obs)
   #d0 <- double(nobs-1)
@@ -465,14 +480,21 @@ bootstrap.kalman <- function(n.boot, Params, KFresults, guesses, do.obs, do.sat,
     }
     
     # MLE
-    simFit <- optim(guesses, fn=KFnllDO, do.obs=do.sim, do.sat=do.sat, k.gas=k.gas, z.mix=z.mix, irr=irr, wtr=wtr)
+    simFit <- optim(guesses, fn=KFnllDO, do.obs=do.sim, do.sat=do.sat, k.gas=k.gas, z.mix=z.mix, irr=irr, wtr=wtr, constrain.sign=constrain.sign)
     simFitPar <- simFit$par
-    simFitGPP <- mean(exp(simFitPar[1]) * irr, na.rm = TRUE) * freq
-    simFitR <- mean(-exp(simFitPar[2]) * log(wtr), na.rm = TRUE) * freq
+    if (constrain.sign == TRUE){
+      simFit.gppCoeff <- exp(simFitPar[1])
+      simFit.rCoeff <- -exp(simFitPar[2])
+    } else {
+      simFit.gppCoeff <- simFitPar[1]
+      simFit.rCoeff <- simFitPar[2]
+    }
+    simFitGPP <- mean(simFit.gppCoeff * irr, na.rm = TRUE) * freq
+    simFitR <- mean(simFit.rCoeff * log(wtr), na.rm = TRUE) * freq
     
     # Writing results to table
-    boot.results[j, "gppCoeff"] <- exp(simFitPar[1])
-    boot.results[j, "rCoeff"] <- -exp(simFitPar[2])
+    boot.results[j, "gppCoeff"] <- simFit.gppCoeff
+    boot.results[j, "rCoeff"] <- simFit.rCoeff
     boot.results[j, "Q"] <- exp(simFitPar[3])
     boot.results[j, "H"] <- exp(simFitPar[4])
     boot.results[j, "convergence"] <- simFit$convergence

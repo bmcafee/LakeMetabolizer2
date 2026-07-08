@@ -10,6 +10,7 @@
 #'@param error.type Option specifying if model should assume pure Process Error 'PE' or Observation Error 'OE'. Defaults to observation error 'OE'.
 #'@param n.boot Numeric of the number of bootstrap iterations. Set to 0 to bypass uncertainty quantification (default). Set to 2 or greater to quantify uncertainty via bootstrapping.
 #'@param ar1.resids Logical. If TRUE, the AR(1) structure of the residuals will be retained during randomization when bootstrapping.
+#'@param constrain.sign Logical. If TRUE, estimates of GPP and R coefficients with be constrained to positive and negative values, respectively.
 #'@param ... additional arguments; currently "datetime" is the only recognized argument passed through \code{...}
 #'@return
 #'A data.frame with columns corresponding to components of metabolism
@@ -109,7 +110,7 @@
 #'
 #'metab.mle(doobs[,2], do.sat, k.gas, z.mix[,2], irr[,2], wtr[,3])
 #'@export
-metab.mle <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type="OE", n.boot = 0, ar1.resids = TRUE, ...){
+metab.mle <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type="OE", n.boot = 0, ar1.resids = TRUE, constrain.sign = TRUE, ...){
   
   complete.inputs(do.obs=do.obs, do.sat=do.sat, k.gas=k.gas,
                   z.mix=z.mix, irr=irr, wtr=wtr, error=TRUE)
@@ -152,24 +153,38 @@ metab.mle <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type="OE", n
   
   Q0 <- ((diff(range(do.obs,na.rm=TRUE)) - mean(do.obs,na.rm=TRUE))^2 / length(do.obs))
   
-  guesses <- c(log(1E-4), log(1E-4), log(Q0))
+  if (constrain.sign == TRUE){
+    guesses <- c(log(1E-4), log(1E-4), log(Q0))
+  } else {
+    guesses <- c(1E-4, 1E-4, log(Q0))
+  }
+  
   
   #We have a different number of fitted parameters depending on error type of the model
   if(error.type=='OE'){
     guesses <- c(guesses, do.obs[1])
     
-    fit <- optim(guesses, fn=mleNllOE, do.obs=do.obs, do.sat=do.sat, k.gas=(k.gas/freq), z.mix=z.mix, irr=irr, wtr=wtr)
+    fit <- optim(guesses, fn=mleNllOE, do.obs=do.obs, do.sat=do.sat, k.gas=(k.gas/freq), z.mix=z.mix, irr=irr, wtr=wtr, constrain.sign = constrain.sign)
     
     pars0 <- fit$par
-    pars <- c("gppCoeff"=exp(pars0[1]), "rCoeff"=-exp(pars0[2]), "Q"=exp(pars0[3]), "nll"=fit$value, "doInit"=pars0[4])
+    if (constrain.sign == TRUE){
+      pars <- c("gppCoeff"=exp(pars0[1]), "rCoeff"=-exp(pars0[2]), "Q"=exp(pars0[3]), "nll"=fit$value, "doInit"=pars0[4])
+    } else {
+      pars <- c("gppCoeff"=pars0[1], "rCoeff"=pars0[2], "Q"=exp(pars0[3]), "nll"=fit$value, "doInit"=pars0[4])
+    }
+    
     
   }else if(error.type=='PE'){
     guesses <- c(guesses)
     
-    fit <- optim(guesses, fn=mleNllPE, do.obs=do.obs, do.sat=do.sat, k.gas=(k.gas/freq), z.mix=z.mix, irr=irr, wtr=wtr)
+    fit <- optim(guesses, fn=mleNllPE, do.obs=do.obs, do.sat=do.sat, k.gas=(k.gas/freq), z.mix=z.mix, irr=irr, wtr=wtr, constrain.sign = constrain.sign)
     
     pars0 <- fit$par
-    pars <- c("gppCoeff"=exp(pars0[1]), "rCoeff"=-exp(pars0[2]), "Q"=exp(pars0[3]), "nll"=fit$value)
+    if (constrain.sign == TRUE){
+      pars <- c("gppCoeff"=exp(pars0[1]), "rCoeff"=-exp(pars0[2]), "Q"=exp(pars0[3]), "nll"=fit$value, "doInit"=pars0[4])
+    } else {
+      pars <- c("gppCoeff"=pars0[1], "rCoeff"=pars0[2], "Q"=exp(pars0[3]), "nll"=fit$value, "doInit"=pars0[4])
+    }
     
   }else{
     stop("error.type must be either 'OE' or 'PE', Observation Error or Process Error respectively.")
@@ -187,7 +202,7 @@ metab.mle <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type="OE", n
   if (n.boot == 0){
     results <- list("params"=pars, "metab"=c("GPP"=GPP,"R"=R,"NEP"=GPP+R))
   } else if (n.boot >= 2){
-    boot.results <- bootstrap.mle(n.boot, do.obs, pars, guesses, do.sat, k.gas, freq, z.mix, irr, wtr, error.type, ar1.resids)
+    boot.results <- bootstrap.mle(n.boot, do.obs, pars, guesses, do.sat, k.gas, freq, z.mix, irr, wtr, error.type, ar1.resids, constrain.sign)
     ci.GPP <- stats::quantile(boot.results$GPP, c(0.025, 0.975), na.rm=TRUE) # 95% confidence interval
     ci.R   <- stats::quantile(boot.results$R,   c(0.025, 0.975), na.rm=TRUE) # 95% confidence interval
     ci.NEP <- stats::quantile(boot.results$NEP, c(0.025, 0.975), na.rm=TRUE) # 95% confidence interval
@@ -227,9 +242,14 @@ mleLoopPE <- function(alpha, doobs, c1, c2, beta, irr, wtr, kz, dosat){
 # ====================
 # = mle NLL function =
 # ====================
-mleNllPE <- function(Params, do.obs, do.sat, k.gas, z.mix, irr, wtr){
-	c1 <- Params[1] #PAR coeff
-	c2 <- Params[2] #log(Temp) coeff
+mleNllPE <- function(Params, do.obs, do.sat, k.gas, z.mix, irr, wtr, constrain.sign){
+	if (constrain.sign == TRUE){
+	  c1 <- exp(Params[1]) #PAR coeff
+	  c2 <- -exp(Params[2]) #log(Temp) coeff
+	} else {
+	  c1 <- Params[1] #PAR coeff
+	  c2 <- Params[2] #log(Temp) coeff
+	}
 	Q <- exp(Params[3]) # Variance of the process error
 
 	# See KalmanDO_smooth.R comments for explanation of beta
@@ -253,9 +273,14 @@ mleNllPE <- function(Params, do.obs, do.sat, k.gas, z.mix, irr, wtr){
 # ====================
 # = mle NLL function =
 # ====================
-mleNllOE <- function(Params, do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type){
-	c1 <- Params[1] #PAR coeff
-	c2 <- Params[2] #log(Temp) coeff
+mleNllOE <- function(Params, do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type, constrain.sign){
+  if (constrain.sign == TRUE){
+    c1 <- exp(Params[1]) #PAR coeff
+    c2 <- -exp(Params[2]) #log(Temp) coeff
+  } else {
+    c1 <- Params[1] #PAR coeff
+    c2 <- Params[2] #log(Temp) coeff
+  }
 	Q <- exp(Params[3]) # Variance of the process error
 
 	# See KalmanDO_smooth.R comments for explanation of beta
@@ -274,7 +299,7 @@ mleNllOE <- function(Params, do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type)
 # =========================================
 # = Function to bootstrap for uncertainty =
 # =========================================
-bootstrap.mle <- function(n.boot, do.obs, pars, guesses, do.sat, k.gas, freq, z.mix, irr, wtr, error.type = "OE", ar1.resids = FALSE){
+bootstrap.mle <- function(n.boot, do.obs, pars, guesses, do.sat, k.gas, freq, z.mix, irr, wtr, error.type = "OE", ar1.resids = FALSE, constrain.sign = TRUE){
   
   ## Calculate fitted values and residuals
   if (error.type == "OE"){
@@ -339,16 +364,24 @@ bootstrap.mle <- function(n.boot, do.obs, pars, guesses, do.sat, k.gas, freq, z.
     doSim <- alpha + simRes
     
     if (error.type == "OE"){
-      simFit <- optim(guesses, fn = mleNllOE, do.obs = doSim, do.sat = do.sat, k.gas = k.gas / freq, z.mix = z.mix, irr = irr, wtr = wtr)
+      simFit <- optim(guesses, fn = mleNllOE, do.obs = doSim, do.sat = do.sat, k.gas = k.gas / freq, z.mix = z.mix, irr = irr, wtr = wtr, constrain.sign = constrain.sign)
     } else if (error.type == "PE"){
-      simFit <- optim(guesses, fn = mleNllPE, do.obs = doSim, do.sat = do.sat, k.gas = k.gas / freq, z.mix = z.mix, irr = irr, wtr = wtr)
+      simFit <- optim(guesses, fn = mleNllPE, do.obs = doSim, do.sat = do.sat, k.gas = k.gas / freq, z.mix = z.mix, irr = irr, wtr = wtr, constrain.sign = constrain.sign)
     }
-    simFitPar <- simFit$par
-    simFitGPP <- mean(exp(simFitPar[1]) * irr, na.rm = TRUE) * freq
-    simFitR <- mean(-exp(simFitPar[2]) * log(wtr), na.rm = TRUE) * freq
     
-    boot.results[i, "gppCoeff"] <- exp(simFitPar[1])
-    boot.results[i, "rCoeff"] <- -exp(simFitPar[2])
+    simFitPar <- simFit$par
+    if (constrain.sign == TRUE){
+      simFit.gppCoeff <- exp(simFitPar[1])
+      simFit.rCoeff <- -exp(simFitPar[2])
+    } else {
+      simFit.gppCoeff <- simFitPar[1]
+      simFit.rCoeff <- simFitPar[2]
+    }
+    simFitGPP <- mean(simFit.gppCoeff * irr, na.rm = TRUE) * freq
+    simFitR <- mean(simFit.rCoeff * log(wtr), na.rm = TRUE) * freq
+    
+    boot.results[i, "gppCoeff"] <- simFit.gppCoeff
+    boot.results[i, "rCoeff"] <- simFit.rCoeff
     boot.results[i, "Q"] <- exp(simFitPar[3])
     boot.results[i, "doInit"] <- simFitPar[4]
     boot.results[i, "convergence"] <- simFit$convergence

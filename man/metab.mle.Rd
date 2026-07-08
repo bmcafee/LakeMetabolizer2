@@ -14,6 +14,7 @@ metab.mle(
   error.type = "OE",
   n.boot = 0,
   ar1.resids = TRUE,
+  constrain.sign = TRUE,
   ...
 )
 }
@@ -36,6 +37,8 @@ metab.mle(
 \item{n.boot}{Numeric of the number of bootstrap iterations. Set to 0 to bypass uncertainty quantification (default). Set to 2 or greater to quantify uncertainty via bootstrapping.}
 
 \item{ar1.resids}{Logical. If TRUE, the AR(1) structure of the residuals will be retained during randomization when bootstrapping.}
+
+\item{constrain.sign}{Logical. If TRUE, estimates of GPP and R coefficients with be constrained to positive and negative values, respectively.}
 
 \item{...}{additional arguments; currently "datetime" is the only recognized argument passed through \code{...}}
 }
