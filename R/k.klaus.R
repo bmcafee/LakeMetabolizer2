@@ -10,7 +10,7 @@ k.klaus = function(ts.data, wnd.z, lake.area, sin, sdi = NULL, method = c("linea
   
   wind = get.vars(ts.data, 'wnd')
   
-  k600 = k.klaus.base(wind[,2], wnd.z, lake.area, sin, sdi = NULL, method = c("linear", "exp", "power"))
+  k600 = k.klaus.base(wind[,2], wnd.z, lake.area, sin, sdi = sdi, method = method)
   
   return(data.frame(datetime=ts.data$datetime, k600=k600))
 }
