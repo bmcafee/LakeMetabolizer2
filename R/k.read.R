@@ -26,7 +26,7 @@
 #'
 #'k.heiskanen(ts.data, wnd.z, Kd, atm.press)
 #'
-#'k.klaus(ts.data, wnd.z, lake.area, spatial.int, method = c("linear", "exp", "power"))
+#'k.klaus(ts.data, wnd.z, lake.area, spatial.int, method = c("linear", "power"))
 #'@param ts.data vector of datetime in POSIXct format
 #'@param method Only for \link{k.crusius} and \link{k.klaus}. String of valid method. For k.crusius either "linear", "bilinear", or "power". For k.klaus either "linear" or "power"
 #'@param wnd.z height of wind measurement, m
@@ -214,9 +214,9 @@ k.read = function(ts.data, wnd.z, Kd, atm.press, lat, lake.area){
 #'
 #'k.heiskanen.base(wnd.z, Kd, atm.press, dateTime, Ts, z.aml, airT, wnd, RH, sw, lwnet)
 #'
-#'k.klaus.base(wnd, wnd.z, lake.area, spatial.int, method = c("linear", "exp", "power"))
+#'k.klaus.base(wnd, wnd.z, lake.area, spatial.int, method = c("linear", "power"))
 #'@param wnd Numeric value of wind speed, (Units:m/s)
-#'@param method Only for \link{k.crusius.base} and \link{k.klaus.base}. String of valid method. For k.crusius.base either "constant", "bilinear", or "power". For k.klaus.base either "linear", "exp", or "power"
+#'@param method Only for \link{k.crusius.base} and \link{k.klaus.base}. String of valid method. For k.crusius.base either "constant", "bilinear", or "power". For k.klaus.base either "linear" or "power"
 #'@param wnd.z Height of wind measurement, (Units: m)
 #'@param Kd Light attenuation coefficient (Units: m^-1)
 #'@param lat Latitude, degrees north

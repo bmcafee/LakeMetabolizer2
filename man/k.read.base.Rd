@@ -28,7 +28,7 @@ k.vachon.base(wnd, lake.area, params=c(2.51,1.48,0.39))
 
 k.heiskanen.base(wnd.z, Kd, atm.press, dateTime, Ts, z.aml, airT, wnd, RH, sw, lwnet)
 
-k.klaus.base(wnd, wnd.z, lake.area, spatial.int, method = c("linear", "exp", "power"))
+k.klaus.base(wnd, wnd.z, lake.area, spatial.int, method = c("linear", "power"))
 }
 \arguments{
 \item{wnd.z}{Height of wind measurement, (Units: m)}
@@ -57,7 +57,7 @@ k.klaus.base(wnd, wnd.z, lake.area, spatial.int, method = c("linear", "exp", "po
 
 \item{lwnet}{Numeric value net long wave radiation, W m^-2}
 
-\item{method}{Only for \link{k.crusius.base} and \link{k.klaus.base}. String of valid method. For k.crusius.base either "constant", "bilinear", or "power". For k.klaus.base either "linear", "exp", or "power"}
+\item{method}{Only for \link{k.crusius.base} and \link{k.klaus.base}. String of valid method. For k.crusius.base either "constant", "bilinear", or "power". For k.klaus.base either "linear" or "power"}
 
 \item{spatial.int}{Only for \link{k.klaus}. Numeric scale of spatial integration, expressed relative
 to total lake surface area: from near 0 (a point-scale measurement, e.g. 1 m^2 / lake.area)

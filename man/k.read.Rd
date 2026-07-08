@@ -25,7 +25,7 @@ k.vachon(ts.data, lake.area, params=c(2.51,1.48,0.39))
 
 k.heiskanen(ts.data, wnd.z, Kd, atm.press)
 
-k.klaus(ts.data, wnd.z, lake.area, spatial.int, method = c("linear", "exp", "power"))
+k.klaus(ts.data, wnd.z, lake.area, spatial.int, method = c("linear", "power"))
 }
 \arguments{
 \item{ts.data}{vector of datetime in POSIXct format}
