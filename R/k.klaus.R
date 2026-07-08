@@ -2,7 +2,7 @@
 # Last update: 2026-06-08 
 
 #'@export
-k.klaus = function(ts.data, wnd.z, lake.area, spatial.int, sdi = NULL, method = c("linear", "exp", "power")){
+k.klaus = function(ts.data, wnd.z, lake.area, spatial.int, method = c("linear", "power")){
   
   if(!has.vars(ts.data, 'wnd')){
     stop('k.klaus requires a "wnd" (wind speed) column in the supplied data')
@@ -10,14 +10,14 @@ k.klaus = function(ts.data, wnd.z, lake.area, spatial.int, sdi = NULL, method = 
   
   wind = get.vars(ts.data, 'wnd')
   
-  k600 = k.klaus.base(wind[,2], wnd.z, lake.area, spatial.int, sdi = sdi, method = method)
+  k600 = k.klaus.base(wind[,2], wnd.z, lake.area, spatial.int, method = method)
   
   return(data.frame(datetime=ts.data$datetime, k600=k600))
 }
 
 
 #'@export
-k.klaus.base <- function(wnd, wnd.z, lake.area, spatial.int, sdi = NULL, method = c("linear", "exp", "power")) {
+k.klaus.base <- function(wnd, wnd.z, lake.area, spatial.int, method = c("linear", "power")) {
   
   method <- match.arg(method)
   
@@ -44,10 +44,12 @@ k.klaus.base <- function(wnd, wnd.z, lake.area, spatial.int, sdi = NULL, method 
   } else if (method == "power") {
     k600 <- (0.281 * log10(lake.area) + 1.361) * (wnd ^ 1.097) - 0.072 * logit.custom(spatial.int) + 1.401
   } else if (method == "exp") {
-    if (is.null(sdi)) {
-      stop("sdi must be provided for exponential model")
-    }
-    k600 <- (-0.057 * logit.custom(spatial.int) + 2.366) * exp(wnd * (0.144 * log10(sdi) + 0.156))
+    # if (is.null(sdi)) {
+    #   stop("sdi must be provided for exponential model")
+    # }
+    # k600 <- (-0.057 * logit.custom(spatial.int) + 2.366) * exp(wnd * (0.144 * log10(sdi) + 0.156))
+    stop('The exponential model was removed per Klaus and Vachon (2020): "...[We] do not recommend using our
+models that include SDI."')
   }
   
   k600 <- k600 * (24/100) # convert cm/hr to m/day
