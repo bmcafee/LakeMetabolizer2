@@ -232,8 +232,13 @@ k.read = function(ts.data, wnd.z, Kd, atm.press, lat, lake.area){
 #'@param RH Numeric value of relative humidity, \%
 #'@param sw Numeric value of short wave radiation, W m^-2
 #'@param lwnet Numeric value net long wave radiation, W m^-2
-#'@param sdi Numeric value of shoreline development index. Only for \link{k.klaus.base}'s "exp" method.
-#'@param sin Numeric value >0 and <1 of the scale of spatial integration. Only for \link{k.klaus.base}.
+#'@param sdi Only for \link{k.klaus}'s "exp" method. Numeric shoreline development index
+#'(unitless, >= 1): the ratio of shoreline length to the circumference of a circle of equal
+#'lake area, SDI = P / (2 * sqrt(pi * lake.area)).
+#'@param sin Only for \link{k.klaus}. Numeric scale of spatial integration, expressed relative
+#'to total lake surface area: from near 0 (a point-scale measurement, e.g. 1 m^2 / lake.area)
+#'up to but not including 1 (whole-lake integration). Must satisfy 0 < sin < 1; the value 1 is
+#'not supported because the model uses logit(sin).
 #'@param params Optional parameter input, only for \link{k.vachon.base} and \link{k.macIntyre.base}. See details.
 #'@details Can change default parameters of MacIntyre and Vachon models. Default for Vachon is
 #'c(2.51,1.48,0.39). Default for MacIntyre is c(1.2,0.4872,1.4784). Heiskanen et al. (2014) uses MacIntyre
