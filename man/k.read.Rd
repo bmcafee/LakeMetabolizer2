@@ -25,7 +25,7 @@ k.vachon(ts.data, lake.area, params=c(2.51,1.48,0.39))
 
 k.heiskanen(ts.data, wnd.z, Kd, atm.press)
 
-k.klaus(ts.data, wnd.z, lake.area, sin, sdi = NULL, method = c("linear", "exp", "power"))
+k.klaus(ts.data, wnd.z, lake.area, spatial.int, method = c("linear", "power"))
 }
 \arguments{
 \item{ts.data}{vector of datetime in POSIXct format}
@@ -40,11 +40,12 @@ k.klaus(ts.data, wnd.z, lake.area, sin, sdi = NULL, method = c("linear", "exp", 
 
 \item{lake.area}{Lake area, m^2}
 
-\item{method}{Only for \link{k.crusius} and \link{k.klaus}. String of valid method . For k.crusius either "linear", "bilinear", or "power". For k.klaus either "linear", "exp", or "power"}
+\item{method}{Only for \link{k.crusius} and \link{k.klaus}. String of valid method. For k.crusius either "linear", "bilinear", or "power". For k.klaus either "linear" or "power"}
 
-\item{sdi}{Numeric value of shoreline development index. Only for \link{k.klaus}'s "exp" method.}
-
-\item{sin}{Numeric value >0 and <1 of the scale of spatial integration. Only for \link{k.klaus}.}
+\item{spatial.int}{Only for \link{k.klaus}. Numeric scale of spatial integration, expressed relative
+to total lake surface area: from near 0 (a point-scale measurement, e.g. 1 m^2 / lake.area)
+up to but not including 1 (whole-lake integration). Must satisfy 0 < spatial.int < 1; the value 1 is
+not supported because the model uses logit(spatial.int).}
 
 \item{params}{Only for \link{k.vachon.base} and \link{k.macIntyre}. See details.}
 }
@@ -82,7 +83,7 @@ wnd.z      = 10   #because we converted to u10
 atm.press  = 1018
 lat       = tb.data$metadata$latitude
 lake.area = tb.data$metadata$lakearea
-sin        = 1/lake.area
+spatial.int        = 1/lake.area
 
 #for k.read and k.macIntyre, we need LW_net.
 #Calculate from the observations we have available.
@@ -98,7 +99,7 @@ atm.press=atm.press, lat=lat, lake.area=lake.area)
 
 k600_macIntyre = k.macIntyre(ts.data, wnd.z=wnd.z, Kd=kd, atm.press=atm.press)
 
-k600_klaus = k.klaus(ts.data, wnd.z=wnd.z, lake.area=lake.area, sin=sin)
+k600_klaus = k.klaus(ts.data, wnd.z=wnd.z, lake.area=lake.area, spatial.int=spatial.int)
 
 }
 \references{

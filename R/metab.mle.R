@@ -14,9 +14,9 @@
 #'@return
 #'A data.frame with columns corresponding to components of metabolism
 #'\describe{
-#'\item{GPP}{numeric estimate of Gross Primary Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
-#'\item{R}{numeric estimate of Respiration, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
-#'\item{NEP}{numeric estimate of Net Ecosystem production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
+	#'\item{GPP}{numeric estimate of Gross Primary Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
+	#'\item{R}{numeric estimate of Respiration, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
+	#'\item{NEP}{numeric estimate of Net Ecosystem production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
 #'}
 #'If n.boot is 2 or greater, the data frame will also contain the following columns:
 #'\describe{
@@ -113,13 +113,13 @@ metab.mle <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type="OE", n
   
   complete.inputs(do.obs=do.obs, do.sat=do.sat, k.gas=k.gas,
                   z.mix=z.mix, irr=irr, wtr=wtr, error=TRUE)
-  
-  match.arg(error.type, choices=c('OE', 'PE'))
-  
-  nobs <- length(do.obs)
-  
-  mm.args <- list(...)
-  
+
+	match.arg(error.type, choices=c('OE', 'PE'))
+
+	nobs <- length(do.obs)
+
+	mm.args <- list(...)
+
   if(any(z.mix <= 0)){
     stop("z.mix must be greater than zero.")
   }
@@ -210,65 +210,65 @@ metab.mle <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type="OE", n
 # = The R loop for Observation Error mle NLL =
 # ============================================
 mleLoopOE <- function(alpha, doobs, c1, c2, beta, irr, wtr, kz, dosat){
-  nobs <- length(doobs)
-  a.loop <- .C("mleLoopCoe", alpha=as.double(alpha), as.double(doobs), as.double(c1), as.double(c2), as.double(beta), as.double(irr), as.double(wtr), as.double(kz), as.double(dosat), as.integer(nobs), PACKAGE="LakeMetabolizer")
-  return(a.loop[["alpha"]])
+	nobs <- length(doobs)
+	a.loop <- .C("mleLoopCoe", alpha=as.double(alpha), as.double(doobs), as.double(c1), as.double(c2), as.double(beta), as.double(irr), as.double(wtr), as.double(kz), as.double(dosat), as.integer(nobs), PACKAGE="LakeMetabolizer")
+	return(a.loop[["alpha"]])
 }
 
 # ============================================
 # = The R loop for Process Error mle NLL =
 # ============================================
 mleLoopPE <- function(alpha, doobs, c1, c2, beta, irr, wtr, kz, dosat){
-  nobs <- length(doobs)
-  a.loop <- .C("mleLoopCpe", alpha=as.double(alpha), as.double(doobs), as.double(c1), as.double(c2), as.double(beta), as.double(irr), as.double(wtr), as.double(kz), as.double(dosat), as.integer(nobs), PACKAGE="LakeMetabolizer")
-  return(a.loop[["alpha"]])
+	nobs <- length(doobs)
+	a.loop <- .C("mleLoopCpe", alpha=as.double(alpha), as.double(doobs), as.double(c1), as.double(c2), as.double(beta), as.double(irr), as.double(wtr), as.double(kz), as.double(dosat), as.integer(nobs), PACKAGE="LakeMetabolizer")
+	return(a.loop[["alpha"]])
 }
 
 # ====================
 # = mle NLL function =
 # ====================
 mleNllPE <- function(Params, do.obs, do.sat, k.gas, z.mix, irr, wtr){
-  c1 <- exp(Params[1]) #PAR coeff
-  c2 <- -exp(Params[2]) #log(Temp) coeff
-  Q <- exp(Params[3]) # Variance of the process error
-  
-  # See KalmanDO_smooth.R comments for explanation of beta
-  kz <- k.gas/z.mix # K and Zmix are both vector of length nobs
-  beta <- exp(-kz) # This beta is for using the differential equation form
-  
-  # Set first true value equal to first observation
-  alpha <- rep(0, length(do.obs))
-  alpha[1] <- do.obs[1]#Let's give this model some starting values
-  
-  #R version of C loop
-  #for(i in 2:length(do.obs)){
-  #	a1 <- c1*irr[i-1] + c2*log(wtr[i-1]) + kz[i-1]*do.sat[i-1]
-  #	alpha[i] <- a1/kz[i-1] + -exp(-kz[i-1])*a1/kz[i-1] + beta[i-1]*alpha[i-1] # NOTE: beta==exp(-kz); kz=K/Zmix
-  #}
-  alpha <- mleLoopPE(alpha=alpha, doobs=do.obs, c1=c1, c2=c2, beta=beta, irr=irr, wtr=wtr, kz=kz, dosat=do.sat)
-  
-  return(-sum(dnorm(do.obs, alpha, sd=sqrt(Q), log=TRUE), na.rm=TRUE))
+	c1 <- Params[1] #PAR coeff
+	c2 <- Params[2] #log(Temp) coeff
+	Q <- exp(Params[3]) # Variance of the process error
+
+	# See KalmanDO_smooth.R comments for explanation of beta
+	kz <- k.gas/z.mix # K and Zmix are both vector of length nobs
+	beta <- exp(-kz) # This beta is for using the differential equation form
+
+	# Set first true value equal to first observation
+	alpha <- rep(0, length(do.obs))
+	alpha[1] <- do.obs[1]#Let's give this model some starting values
+
+	#R version of C loop
+	#for(i in 2:length(do.obs)){
+	#	a1 <- c1*irr[i-1] + c2*log(wtr[i-1]) + kz[i-1]*do.sat[i-1]
+	#	alpha[i] <- a1/kz[i-1] + -exp(-kz[i-1])*a1/kz[i-1] + beta[i-1]*alpha[i-1] # NOTE: beta==exp(-kz); kz=K/Zmix
+	#}
+	alpha <- mleLoopPE(alpha=alpha, doobs=do.obs, c1=c1, c2=c2, beta=beta, irr=irr, wtr=wtr, kz=kz, dosat=do.sat)
+
+	return(-sum(dnorm(do.obs, alpha, sd=sqrt(Q), log=TRUE), na.rm=TRUE))
 }#End function
 
 # ====================
 # = mle NLL function =
 # ====================
 mleNllOE <- function(Params, do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type){
-  c1 <- exp(Params[1]) #PAR coeff
-  c2 <- -exp(Params[2]) #log(Temp) coeff
-  Q <- exp(Params[3]) # Variance of the process error
-  
-  # See KalmanDO_smooth.R comments for explanation of beta
-  kz <- k.gas/z.mix # K and Zmix are both vector of length nobs
-  beta <- exp(-kz) # This beta is for using the differential equation form
-  
-  # Set first true value equal to first observation
-  alpha <- rep(0, length(do.obs))
-  alpha[1] <- Params[4] #Free varying initial DO value
-  
-  alpha <- mleLoopOE(alpha=alpha, doobs=do.obs, c1=c1, c2=c2, beta=beta, irr=irr, wtr=wtr, kz=kz, dosat=do.sat)
-  
-  return(-sum(dnorm(do.obs, alpha, sd=sqrt(Q), log=TRUE), na.rm=TRUE))
+	c1 <- Params[1] #PAR coeff
+	c2 <- Params[2] #log(Temp) coeff
+	Q <- exp(Params[3]) # Variance of the process error
+
+	# See KalmanDO_smooth.R comments for explanation of beta
+	kz <- k.gas/z.mix # K and Zmix are both vector of length nobs
+	beta <- exp(-kz) # This beta is for using the differential equation form
+
+	# Set first true value equal to first observation
+	alpha <- rep(0, length(do.obs))
+	alpha[1] <- Params[4] #Free varying initial DO value
+
+	alpha <- mleLoopOE(alpha=alpha, doobs=do.obs, c1=c1, c2=c2, beta=beta, irr=irr, wtr=wtr, kz=kz, dosat=do.sat)
+
+	return(-sum(dnorm(do.obs, alpha, sd=sqrt(Q), log=TRUE), na.rm=TRUE))
 }#End function
 
 # =========================================

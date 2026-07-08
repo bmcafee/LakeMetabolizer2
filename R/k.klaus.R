@@ -2,7 +2,7 @@
 # Last update: 2026-06-08 
 
 #'@export
-k.klaus = function(ts.data, wnd.z, lake.area, sin, sdi = NULL, method = c("linear", "exp", "power")){
+k.klaus = function(ts.data, wnd.z, lake.area, spatial.int, method = c("linear", "power")){
   
   if(!has.vars(ts.data, 'wnd')){
     stop('k.klaus requires a "wnd" (wind speed) column in the supplied data')
@@ -10,14 +10,14 @@ k.klaus = function(ts.data, wnd.z, lake.area, sin, sdi = NULL, method = c("linea
   
   wind = get.vars(ts.data, 'wnd')
   
-  k600 = k.klaus.base(wind[,2], wnd.z, lake.area, sin, sdi = NULL, method = c("linear", "exp", "power"))
+  k600 = k.klaus.base(wind[,2], wnd.z, lake.area, spatial.int, method = method)
   
   return(data.frame(datetime=ts.data$datetime, k600=k600))
 }
 
 
 #'@export
-k.klaus.base <- function(wnd, wnd.z, lake.area, sin, sdi = NULL, method = c("linear", "exp", "power")) {
+k.klaus.base <- function(wnd, wnd.z, lake.area, spatial.int, method = c("linear", "power")) {
   
   method <- match.arg(method)
   
@@ -26,28 +26,30 @@ k.klaus.base <- function(wnd, wnd.z, lake.area, sin, sdi = NULL, method = c("lin
   
   # Converting uz to u10
   if (wnd.z != 10){
-    wnd <- LakeMetabolizer::wind.scale.base(wnd = wnd, wnd.z = wnd.z)
+    wnd <- wind.scale.base(wnd = wnd, wnd.z = wnd.z)
   }
   
   # helper logit function
-  logit_custom <- function(x){
+  logit.custom <- function(x){
     return(log(x / (1 - x)))
   }
   
   # sanity checks
-  if (any(sin <= 0 | sin >= 1)) {
-    stop("sin must be between 0 and 1 (exclusive)")
+  if (any(spatial.int <= 0 | spatial.int >= 1)) {
+    stop("spatial.int must be between 0 and 1 (exclusive)")
   }
   
   if (method == "linear") {
-    k600 <- (0.328 * log10(lake.area) + 1.581) * wnd - 0.066 * logit_custom(sin) + 1.266
+    k600 <- (0.328 * log10(lake.area) + 1.581) * wnd - 0.066 * logit.custom(spatial.int) + 1.266
   } else if (method == "power") {
-    k600 <- (0.281 * log10(lake.area) + 1.361) * (wnd ^ 1.097) - 0.072 * logit_custom(sin) + 1.401
+    k600 <- (0.281 * log10(lake.area) + 1.361) * (wnd ^ 1.097) - 0.072 * logit.custom(spatial.int) + 1.401
   } else if (method == "exp") {
-    if (is.null(sdi)) {
-      stop("sdi must be provided for exponential model")
-    }
-    k600 <- (-0.057 * logit_custom(sin) + 2.366) * exp(wnd * (0.144 * log10(sdi) + 0.156))
+    # if (is.null(sdi)) {
+    #   stop("sdi must be provided for exponential model")
+    # }
+    # k600 <- (-0.057 * logit.custom(spatial.int) + 2.366) * exp(wnd * (0.144 * log10(sdi) + 0.156))
+    stop('The exponential model was removed per Klaus and Vachon (2020): "...[We] do not recommend using our
+models that include SDI."')
   }
   
   k600 <- k600 * (24/100) # convert cm/hr to m/day

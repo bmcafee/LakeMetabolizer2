@@ -28,7 +28,7 @@ k.vachon.base(wnd, lake.area, params=c(2.51,1.48,0.39))
 
 k.heiskanen.base(wnd.z, Kd, atm.press, dateTime, Ts, z.aml, airT, wnd, RH, sw, lwnet)
 
-k.klaus.base(wnd, wnd.z, lake.area, sin, sdi = NULL, method = c("linear", "exp", "power"))
+k.klaus.base(wnd, wnd.z, lake.area, spatial.int, method = c("linear", "power"))
 }
 \arguments{
 \item{wnd.z}{Height of wind measurement, (Units: m)}
@@ -57,11 +57,12 @@ k.klaus.base(wnd, wnd.z, lake.area, sin, sdi = NULL, method = c("linear", "exp",
 
 \item{lwnet}{Numeric value net long wave radiation, W m^-2}
 
-\item{method}{Only for \link{k.crusius.base} and \link{k.klaus.base}. String of valid method . For k.crusius.base either "constant", "bilinear", or "power". For k.klaus.base either "linear", "exp", or "power"}
+\item{method}{Only for \link{k.crusius.base} and \link{k.klaus.base}. String of valid method. For k.crusius.base either "constant", "bilinear", or "power". For k.klaus.base either "linear" or "power"}
 
-\item{sdi}{Numeric value of shoreline development index. Only for \link{k.klaus.base}'s "exp" method.}
-
-\item{sin}{Numeric value >0 and <1 of the scale of spatial integration. Only for \link{k.klaus.base}.}
+\item{spatial.int}{Only for \link{k.klaus}. Numeric scale of spatial integration, expressed relative
+to total lake surface area: from near 0 (a point-scale measurement, e.g. 1 m^2 / lake.area)
+up to but not including 1 (whole-lake integration). Must satisfy 0 < spatial.int < 1; the value 1 is
+not supported because the model uses logit(spatial.int).}
 
 \item{params}{Optional parameter input, only for \link{k.vachon.base} and \link{k.macIntyre.base}. See details.}
 }
@@ -91,7 +92,7 @@ wnd <- 6
 RH <- 90
 sw <- 800
 lwnet <- -55
-sin <- 1/lake.area
+spatial.int <- 1/lake.area
 timeStep <- 30
 
 U10 <- wind.scale.base(wnd, wnd.z)
@@ -109,7 +110,7 @@ atm.press, dateTime, Ts, z.aml, airT, wnd, RH, sw, lwnet)
 k600_macInytre <- k.macIntyre.base(wnd.z, Kd, atm.press,
 dateTime, Ts, z.aml, airT, wnd, RH, sw, lwnet)
 
-k600_klaus <- k.klaus.base(wnd, wnd.z, lake.area, sin)
+k600_klaus <- k.klaus.base(wnd, wnd.z, lake.area, spatial.int)
 
 }
 \references{
