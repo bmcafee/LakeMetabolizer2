@@ -25,7 +25,7 @@ k.vachon(ts.data, lake.area, params=c(2.51,1.48,0.39))
 
 k.heiskanen(ts.data, wnd.z, Kd, atm.press)
 
-k.klaus(ts.data, wnd.z, lake.area, sin, sdi = NULL, method = c("linear", "exp", "power"))
+k.klaus(ts.data, wnd.z, lake.area, spatial.int, sdi = NULL, method = c("linear", "exp", "power"))
 }
 \arguments{
 \item{ts.data}{vector of datetime in POSIXct format}
@@ -40,11 +40,16 @@ k.klaus(ts.data, wnd.z, lake.area, sin, sdi = NULL, method = c("linear", "exp", 
 
 \item{lake.area}{Lake area, m^2}
 
-\item{method}{Only for \link{k.crusius} and \link{k.klaus}. String of valid method . For k.crusius either "linear", "bilinear", or "power". For k.klaus either "linear", "exp", or "power"}
+\item{method}{Only for \link{k.crusius} and \link{k.klaus}. String of valid method. For k.crusius either "linear", "bilinear", or "power". For k.klaus either "linear", "exp", or "power"}
 
-\item{sdi}{Numeric value of shoreline development index. Only for \link{k.klaus}'s "exp" method.}
+\item{sdi}{Only for \link{k.klaus}'s "exp" method. Numeric shoreline development index
+(unitless, >= 1): the ratio of shoreline length to the circumference of a circle of equal
+lake area, SDI = P / (2 * sqrt(pi * lake.area)).}
 
-\item{sin}{Numeric value >0 and <1 of the scale of spatial integration. Only for \link{k.klaus}.}
+\item{spatial.int}{Only for \link{k.klaus}. Numeric scale of spatial integration, expressed relative
+to total lake surface area: from near 0 (a point-scale measurement, e.g. 1 m^2 / lake.area)
+up to but not including 1 (whole-lake integration). Must satisfy 0 < spatial.int < 1; the value 1 is
+not supported because the model uses logit(spatial.int).}
 
 \item{params}{Only for \link{k.vachon.base} and \link{k.macIntyre}. See details.}
 }
@@ -58,6 +63,15 @@ Returns the gas exchange velocity based on the chosen model in units of m/day
 Can change default parameters of MacIntyre and Vachon models. Default for Vachon is
 c(2.51,1.48,0.39). Default for MacIntyre is c(1.2,0.4872,1.4784). Heiskanen 2014 uses MacIntyre
 model with c(0.5,0.77,0.3) and z.aml constant at 0.15.
+
+\code{k.klaus} implements the three wind-based models of Klaus and Vachon (2020),
+each fit to 46 globally distributed lakes (their Table 3, lowest-AIC parameterizations).
+The \code{method} argument selects the functional form of the k600-wind relationship:
+"linear" and "power" scale k600 with wind speed, lake area, and the scale of spatial
+integration (\code{spatial.int}); "exp" is exponential in wind speed and additionally depends on
+the shoreline development index (\code{sdi}). Note: Klaus and Vachon (2020) caution that
+the SDI-based ("exp") model is not mechanistically meaningful and should not be used for
+predictive purposes.
 }
 \examples{
 data.path = system.file('extdata', package="LakeMetabolizer")
@@ -82,7 +96,7 @@ wnd.z      = 10   #because we converted to u10
 atm.press  = 1018
 lat       = tb.data$metadata$latitude
 lake.area = tb.data$metadata$lakearea
-sin        = 1/lake.area
+spatial.int        = 1/lake.area
 
 #for k.read and k.macIntyre, we need LW_net.
 #Calculate from the observations we have available.
@@ -98,7 +112,7 @@ atm.press=atm.press, lat=lat, lake.area=lake.area)
 
 k600_macIntyre = k.macIntyre(ts.data, wnd.z=wnd.z, Kd=kd, atm.press=atm.press)
 
-k600_klaus = k.klaus(ts.data, wnd.z=wnd.z, lake.area=lake.area, sin=sin)
+k600_klaus = k.klaus(ts.data, wnd.z=wnd.z, lake.area=lake.area, spatial.int=spatial.int)
 
 }
 \references{
