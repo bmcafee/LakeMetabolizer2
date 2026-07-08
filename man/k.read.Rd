@@ -25,7 +25,7 @@ k.vachon(ts.data, lake.area, params=c(2.51,1.48,0.39))
 
 k.heiskanen(ts.data, wnd.z, Kd, atm.press)
 
-k.klaus(ts.data, wnd.z, lake.area, spatial.int, sdi = NULL, method = c("linear", "exp", "power"))
+k.klaus(ts.data, wnd.z, lake.area, spatial.int, method = c("linear", "exp", "power"))
 }
 \arguments{
 \item{ts.data}{vector of datetime in POSIXct format}
@@ -40,11 +40,7 @@ k.klaus(ts.data, wnd.z, lake.area, spatial.int, sdi = NULL, method = c("linear",
 
 \item{lake.area}{Lake area, m^2}
 
-\item{method}{Only for \link{k.crusius} and \link{k.klaus}. String of valid method. For k.crusius either "linear", "bilinear", or "power". For k.klaus either "linear", "exp", or "power"}
-
-\item{sdi}{Only for \link{k.klaus}'s "exp" method. Numeric shoreline development index
-(unitless, >= 1): the ratio of shoreline length to the circumference of a circle of equal
-lake area, SDI = P / (2 * sqrt(pi * lake.area)).}
+\item{method}{Only for \link{k.crusius} and \link{k.klaus}. String of valid method. For k.crusius either "linear", "bilinear", or "power". For k.klaus either "linear" or "power"}
 
 \item{spatial.int}{Only for \link{k.klaus}. Numeric scale of spatial integration, expressed relative
 to total lake surface area: from near 0 (a point-scale measurement, e.g. 1 m^2 / lake.area)
@@ -63,15 +59,6 @@ Returns the gas exchange velocity based on the chosen model in units of m/day
 Can change default parameters of MacIntyre and Vachon models. Default for Vachon is
 c(2.51,1.48,0.39). Default for MacIntyre is c(1.2,0.4872,1.4784). Heiskanen 2014 uses MacIntyre
 model with c(0.5,0.77,0.3) and z.aml constant at 0.15.
-
-\code{k.klaus} implements the three wind-based models of Klaus and Vachon (2020),
-each fit to 46 globally distributed lakes (their Table 3, lowest-AIC parameterizations).
-The \code{method} argument selects the functional form of the k600-wind relationship:
-"linear" and "power" scale k600 with wind speed, lake area, and the scale of spatial
-integration (\code{spatial.int}); "exp" is exponential in wind speed and additionally depends on
-the shoreline development index (\code{sdi}). Note: Klaus and Vachon (2020) caution that
-the SDI-based ("exp") model is not mechanistically meaningful and should not be used for
-predictive purposes.
 }
 \examples{
 data.path = system.file('extdata', package="LakeMetabolizer")
