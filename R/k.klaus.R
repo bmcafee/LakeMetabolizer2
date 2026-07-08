@@ -30,7 +30,7 @@ k.klaus.base <- function(wnd, wnd.z, lake.area, sin, sdi = NULL, method = c("lin
   }
   
   # helper logit function
-  logit_custom <- function(x){
+  logit.custom <- function(x){
     return(log(x / (1 - x)))
   }
   
