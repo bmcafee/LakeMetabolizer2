@@ -12,7 +12,7 @@ metab.kalman(
   irr,
   wtr,
   n.boot = 0,
-  constrain.sign = TRUE,
+  constrain.sign = FALSE,
   ...
 )
 }

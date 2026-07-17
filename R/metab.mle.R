@@ -110,7 +110,7 @@
 #'
 #'metab.mle(doobs[,2], do.sat, k.gas, z.mix[,2], irr[,2], wtr[,3])
 #'@export
-metab.mle <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type="OE", n.boot = 0, ar1.resids = TRUE, constrain.sign = TRUE, ...){
+metab.mle <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type="OE", n.boot = 0, ar1.resids = TRUE, constrain.sign = FALSE, ...){
   
   complete.inputs(do.obs=do.obs, do.sat=do.sat, k.gas=k.gas,
                   z.mix=z.mix, irr=irr, wtr=wtr, error=TRUE)

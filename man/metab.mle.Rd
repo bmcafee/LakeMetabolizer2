@@ -14,7 +14,7 @@ metab.mle(
   error.type = "OE",
   n.boot = 0,
   ar1.resids = TRUE,
-  constrain.sign = TRUE,
+  constrain.sign = FALSE,
   ...
 )
 }
