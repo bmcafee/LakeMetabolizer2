@@ -299,7 +299,7 @@ mleNllOE <- function(Params, do.obs, do.sat, k.gas, z.mix, irr, wtr, error.type,
 # =========================================
 # = Function to bootstrap for uncertainty =
 # =========================================
-bootstrap.mle <- function(n.boot, do.obs, pars, guesses, do.sat, k.gas, freq, z.mix, irr, wtr, error.type = "OE", ar1.resids = FALSE, constrain.sign = TRUE){
+bootstrap.mle <- function(n.boot, do.obs, pars, guesses, do.sat, k.gas, freq, z.mix, irr, wtr, error.type = "OE", ar1.resids = FALSE, constrain.sign = FALSE){
   
   ## Calculate fitted values and residuals
   if (error.type == "OE"){

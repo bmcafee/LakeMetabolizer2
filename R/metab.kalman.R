@@ -101,7 +101,7 @@
 #'             do.sat=do.sat, wtr=wtr[,2],
 #'             k.gas=k.gas, do.obs=doobs[,2])
 #'@export
-metab.kalman <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, n.boot = 0, constrain.sign = TRUE, ...){
+metab.kalman <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, n.boot = 0, constrain.sign = FALSE, ...){
   
   complete.inputs(do.obs=do.obs, do.sat=do.sat, k.gas=k.gas,
                   z.mix=z.mix, irr=irr, wtr=wtr, error=TRUE)
