@@ -131,6 +131,15 @@ metab.kalman <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, n.boot = 0, con
     freq <- nobs
   }
   
+  # Additional warning about bootstrapping
+  if (n.boot == 0){
+    # Do nothing
+  } else if (n.boot >= 2){
+    warning("Bootstrapping with the Kalman filter is experimental. Please consider your confidence intervals carefully.")
+  } else {
+    stop("n.boot must be 0 (no uncertainty quantification) or greater than 2 (uncertainty quantification via bootstrapping).")
+  }
+  
   # Filter and fit
   if (constrain.sign == TRUE){
     guesses <- c(log(1E-4),log(1E-4),log(5),log(5))
