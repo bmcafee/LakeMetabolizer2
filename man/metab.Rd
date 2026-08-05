@@ -4,7 +4,7 @@
 \alias{metab}
 \title{Calculate metabolism}
 \usage{
-metab(data, method, verbose = TRUE, wtr.name="wtr", irr.name="irr", 
+metab(data, method, verbose = interactive(), wtr.name="wtr", irr.name="irr", 
      do.obs.name="do.obs", ...)
 }
 \arguments{
