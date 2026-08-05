@@ -4,7 +4,8 @@
 \alias{metab}
 \title{Calculate metabolism}
 \usage{
-metab(data, method, verbose = TRUE, wtr.name="wtr", irr.name="irr", do.obs.name="do.obs", ...)
+metab(data, method, verbose = TRUE, wtr.name="wtr", irr.name="irr", 
+     do.obs.name="do.obs", ...)
 }
 \arguments{
 \item{data}{a data.frame whose columns are

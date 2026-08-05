@@ -30,7 +30,7 @@ metab.kalman(
 
 \item{wtr}{Vector of water temperatures in \eqn{^{\circ}C}{degrees C}. Used in scaling respiration with temperature}
 
-\item{n.boot}{Numeric of the number of bootstrap iterations. Set to 0 to bypass uncertainty quantification (default). Set to 2 or greater to quantify uncertainty via bootstrapping.}
+\item{n.boot}{Numeric of the number of bootstrap iterations. Set to 0 to bypass uncertainty quantification (default). Set to 2 or greater to quantify uncertainty via bootstrapping. To ensure reproducible confidence intervals, use \link{set.seed}.}
 
 \item{constrain.sign}{Logical. If TRUE, estimates of GPP and R coefficients with be constrained to positive and negative values, respectively.}
 
@@ -50,10 +50,10 @@ If n.boot is 2 or greater, the data frame will also contain the following column
 \item{GPP.cv}{coefficient of variation of the bootstrapped estimates of Gross Primary Production}
 \item{R.lci}{lower 95\% confidence interval of the estimate of Respiration, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
 \item{R.uci}{upper 95\% confidence interval of the estimate of Respiration, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
-\item{R.cv}{coefficient of variation of the bootstrapped estimates of Respiration}
+\item{R.cv}{coefficient of variation of the bootstrapped estimates of Respiration. As R is typically negative, the CV is also negative.}
 \item{NEP.lci}{lower 95\% confidence interval of the estimate of Net Ecosystem Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
 \item{NEP.uci}{upper 95\% confidence interval of the estimate of Net Ecosystem Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
-\item{NEP.cv}{coefficient of variation of the bootstrapped estimates of Net Ecosystem Production}
+\item{NEP.cv}{coefficient of variation of the bootstrapped estimates of Net Ecosystem Production. As the mean NEP can approach 0, the CV can become inflated.}
 }
 
 

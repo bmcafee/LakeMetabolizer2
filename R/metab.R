@@ -109,7 +109,7 @@
 #'
 #'@export
 
-metab <- function(data, method = NULL, verbose = TRUE, wtr.name="wtr", irr.name="irr", do.obs.name="do.obs", ...){
+metab <- function(data, method = NULL, verbose = interactive(), wtr.name="wtr", irr.name="irr", do.obs.name="do.obs", ...){
 
 	m.args <- list(...)
 

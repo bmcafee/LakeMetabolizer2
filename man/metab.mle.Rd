@@ -34,7 +34,7 @@ metab.mle(
 
 \item{error.type}{Option specifying if model should assume pure Process Error 'PE' or Observation Error 'OE'. Defaults to observation error 'OE'.}
 
-\item{n.boot}{Numeric of the number of bootstrap iterations. Set to 0 to bypass uncertainty quantification (default). Set to 2 or greater to quantify uncertainty via bootstrapping.}
+\item{n.boot}{Numeric of the number of bootstrap iterations. Set to 0 to bypass uncertainty quantification (default). Set to 2 or greater to quantify uncertainty via bootstrapping. To ensure reproducible confidence intervals, use \link{set.seed}.}
 
 \item{ar1.resids}{Logical. If TRUE, the AR(1) structure of the residuals will be retained during randomization when bootstrapping.}
 
@@ -56,10 +56,10 @@ If n.boot is 2 or greater, the data frame will also contain the following column
 \item{GPP.cv}{coefficient of variation of the bootstrapped estimates of Gross Primary Production}
 \item{R.lci}{lower 95\% confidence interval of the estimate of Respiration, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
 \item{R.uci}{upper 95\% confidence interval of the estimate of Respiration, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
-\item{R.cv}{coefficient of variation of the bootstrapped estimates of Respiration}
+\item{R.cv}{coefficient of variation of the bootstrapped estimates of Respiration. As R is typically negative, the CV is also negative.}
 \item{NEP.lci}{lower 95\% confidence interval of the estimate of Net Ecosystem Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
 \item{NEP.uci}{upper 95\% confidence interval of the estimate of Net Ecosystem Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
-\item{NEP.cv}{coefficient of variation of the bootstrapped estimates of Net Ecosystem Production}
+\item{NEP.cv}{coefficient of variation of the bootstrapped estimates of Net Ecosystem Production. As the mean NEP can approach 0, the CV can become inflated.}
 }
 The maximum likelihood estimates of model parameters can be accessed via \code{attributes(metab.mle(...))[["params"]]}
 }

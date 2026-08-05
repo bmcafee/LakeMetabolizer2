@@ -8,7 +8,7 @@
 #'@param irr Vector of photosynthetically active radiation in \eqn{\mu mol\ m^{-2} s^{-1}}{micro mols / m^2 / s}
 #'@param wtr Vector of water temperatures in \eqn{^{\circ}C}{degrees C}. Used in scaling respiration with temperature
 #'@param error.type Option specifying if model should assume pure Process Error 'PE' or Observation Error 'OE'. Defaults to observation error 'OE'.
-#'@param n.boot Numeric of the number of bootstrap iterations. Set to 0 to bypass uncertainty quantification (default). Set to 2 or greater to quantify uncertainty via bootstrapping.
+#'@param n.boot Numeric of the number of bootstrap iterations. Set to 0 to bypass uncertainty quantification (default). Set to 2 or greater to quantify uncertainty via bootstrapping. To ensure reproducible confidence intervals, use \link{set.seed}.
 #'@param ar1.resids Logical. If TRUE, the AR(1) structure of the residuals will be retained during randomization when bootstrapping.
 #'@param constrain.sign Logical. If TRUE, estimates of GPP and R coefficients with be constrained to positive and negative values, respectively.
 #'@param ... additional arguments; currently "datetime" is the only recognized argument passed through \code{...}
@@ -26,10 +26,10 @@
 #'\item{GPP.cv}{coefficient of variation of the bootstrapped estimates of Gross Primary Production}
 #'\item{R.lci}{lower 95\% confidence interval of the estimate of Respiration, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
 #'\item{R.uci}{upper 95\% confidence interval of the estimate of Respiration, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
-#'\item{R.cv}{coefficient of variation of the bootstrapped estimates of Respiration}
+#'\item{R.cv}{coefficient of variation of the bootstrapped estimates of Respiration. As R is typically negative, the CV is also negative.}
 #'\item{NEP.lci}{lower 95\% confidence interval of the estimate of Net Ecosystem Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
 #'\item{NEP.uci}{upper 95\% confidence interval of the estimate of Net Ecosystem Production, \eqn{mg O_2 L^{-1} d^{-1}}{mg O2 / L / d}}
-#'\item{NEP.cv}{coefficient of variation of the bootstrapped estimates of Net Ecosystem Production}
+#'\item{NEP.cv}{coefficient of variation of the bootstrapped estimates of Net Ecosystem Production. As the mean NEP can approach 0, the CV can become inflated.}
 #'}
 #' The maximum likelihood estimates of model parameters can be accessed via \code{attributes(metab.mle(...))[["params"]]}
 #'
@@ -331,7 +331,7 @@ bootstrap.mle <- function(n.boot, do.obs, pars, guesses, do.sat, k.gas, freq, z.
   n.obs <- length(do.obs)
   
   if (ar1.resids){
-    ar1.lm <- lm(resids[1:(n.obs - 1)] ~ resids[2:n.obs] - 1)
+    ar1.lm <- lm(resids[2:n.obs] ~ resids[1:(n.obs - 1)] - 1)
     ar1.coeff <- as.numeric(ar1.lm$coefficients)
     ar1.sd <- sd(ar1.lm$residuals)
   }
