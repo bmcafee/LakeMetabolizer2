@@ -7,7 +7,8 @@
 #'
 #'
 #'@usage
-#'metab(data, method, verbose = TRUE, wtr.name="wtr", irr.name="irr", do.obs.name="do.obs", ...)
+#'metab(data, method, verbose = TRUE, wtr.name="wtr", irr.name="irr", 
+#'      do.obs.name="do.obs", ...)
 #'
 #'@param data
 #' a data.frame whose columns are
