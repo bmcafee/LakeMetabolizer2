@@ -187,7 +187,7 @@ metab.kalman <- function(do.obs, do.sat, k.gas, z.mix, irr, wtr, n.boot = 0, con
     stop("n.boot must be 0 (no uncertainty quantification) or greater than 2 (uncertainty quantification via bootstrapping).")
   }
   
-  
+  return(results)
 }
 
 
