@@ -164,20 +164,44 @@ bayesFit <- function(data, params, mf, tend="median", ...){ #function that write
 	sdSim <- apply(simOut, 2, sd)
 
 	#Figure out the order of the sims.matrix columns ...
-	n.obs <- length(data$U[,1])
-	GPP <- mean(ctSim[1]*data$U[,1], na.rm=TRUE) * n.obs # gpp coef * par, then sum
-	R <- mean(ctSim[2]*data$U[,2], na.rm=TRUE) * n.obs # r coef * log(temp), then sum
+	# n.obs <- length(data$U[,1])
+	# GPP <- mean(ctSim[1]*data$U[,1], na.rm=TRUE) * n.obs # gpp coef * par, then sum
+	# R <- mean(ctSim[2]*data$U[,2], na.rm=TRUE) * n.obs # r coef * log(temp), then sum
 
-	GPPsd <- sqrt(sum(sdSim[1]^2*data$U[,1]^2))
-	Rsd <- sqrt(sum(sdSim[2]^2*data$U[,2]^2))
-	NEPsd <- sqrt(GPPsd^2 + Rsd^2)
+	# GPPsd <- sqrt(sum(sdSim[1]^2*data$U[,1]^2))
+	# Rsd <- sqrt(sum(sdSim[2]^2*data$U[,2]^2))
+	# NEPsd <- sqrt(GPPsd^2 + Rsd^2)
+	
+	# Constants multiplying each posterior coefficient
+	GPP.mult <- sum(data$U[,1], na.rm = TRUE)
+	R.mult   <- sum(data$U[,2], na.rm = TRUE)
+	
+	# Calculate GPP, R, and NEP for every posterior draw
+	GPP.sim <- simOut[,1] * GPP.mult
+	R.sim   <- simOut[,2] * R.mult
+	NEP.sim <- GPP.sim + R.sim
+	
+	# Posterior medians
+	GPP <- median(GPP.sim)
+	R   <- median(R.sim)
+	NEP <- median(NEP.sim)
+	
+	# Posterior SD
+	GPPsd <- sd(GPP.sim)
+	Rsd   <- sd(R.sim)
+	NEPsd <- sd(NEP.sim)
+	
+	# 95% credible intervals
+	GPPci <- quantile(GPP.sim, c(0.025, 0.975))
+	Rci   <- quantile(R.sim, c(0.025, 0.975))
+	NEPci <- quantile(NEP.sim, c(0.025, 0.975))
 
 	return(list(
 		"model" = jags.m,
 		"params" = ctSim[1:2],
 		"metab.sd" = matrix(c(GPPsd, Rsd, NEPsd), nrow=1, dimnames=list(NULL, c("GPPsd", "Rsd", "NEPsd"))),
-		"metab" = matrix(c(GPP, R, GPP+R), nrow=1, dimnames=list(NULL, c("GPP", "R", "NEP")))
-	)) # need to clean up format, and maybe include a return of the sd's of the estimates
+		"metab" = matrix(c(GPP, R, GPP+R, GPPci[1], GPPci[2], Rci[1], Rci[2], NEPci[1], NEPci[2]), nrow=1, dimnames=list(NULL, c("GPP", "R", "NEP", "GPP.lci", "GPP.uci", "R.lci", "R.uci", "NEP.lci", "NEP.uci")))
+	))
 }
 
 #'@title Metabolism model based on a bayesian parameter estimation framework

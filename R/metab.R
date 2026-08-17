@@ -165,7 +165,7 @@ metab <- function(data, method = NULL, verbose = interactive(), wtr.name="wtr", 
 	# ==================================
 	# = Apply metab to subsets of data =
 	# ==================================
-	if (verbose == TRUE){
+	if (verbose == TRUE & mtd != "bayesian"){
 	  pb <- utils::txtProgressBar(min = 0, max = nid, initial = 0, style = 3) 
 	}
 	for(i in unique(ids)){
@@ -179,11 +179,11 @@ metab <- function(data, method = NULL, verbose = interactive(), wtr.name="wtr", 
 		# print(paste("Analyzing day #", i)); flush.console(); # Is this annoying? I'm commenting-out
 		results[[i]] <- do.call(mtdCall, largs) # this is where all of the work happens
 		
-		if (verbose == TRUE){
+		if (verbose == TRUE & mtd != "bayesian"){
 		  utils::setTxtProgressBar(pb,i)
 		}
 	}
-	if (verbose == TRUE){close(pb)}
+	if (verbose == TRUE & mtd != "bayesian"){close(pb)}
 	answer0 <- conquerList(results, naming=data.frame("year"=data2[!duplicated(ids),"year"], "doy"=trunc(data2[!duplicated(ids),"doy"])))
 
 
